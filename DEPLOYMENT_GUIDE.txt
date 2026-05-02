@@ -1,0 +1,147 @@
+# EXPRESS SAVERS LTD — TASK SYSTEM DEPLOYMENT GUIDE
+# How to get your system live so you can check it from anywhere
+
+=====================================================
+WHAT YOU HAVE BUILT
+=====================================================
+
+A full web application with:
+
+1. STAFF APP (tablet) — staff log in with their name + PIN, complete tasks,
+   upload photos as evidence, and submit daily reports
+
+2. MANAGER DASHBOARD (your phone/laptop) — you see both stores live,
+   all task completions, all evidence photos, all penalties, full history,
+   and you can add/edit/remove tasks and staff yourself
+
+=====================================================
+HOW TO DEPLOY — STEP BY STEP (FREE)
+=====================================================
+
+STEP 1 — Create a free GitHub account
+  - Go to github.com and sign up (free)
+  - This is where your code lives
+
+STEP 2 — Upload your files to GitHub
+  - Create a new repository called "expresssavers-tasks"
+  - Upload all the files from the expresssavers folder:
+      server.js
+      package.json
+      public/index.html
+      public/manager.html
+
+STEP 3 — Deploy to Render (free hosting)
+  - Go to render.com and sign up with your GitHub account
+  - Click "New Web Service"
+  - Connect your GitHub repo
+  - Settings:
+      Build Command: npm install
+      Start Command: node server.js
+      Environment: Node
+  - Click "Create Web Service"
+  - Render gives you a URL like: https://expresssavers-tasks.onrender.com
+  - This is your live URL — works from anywhere in the world
+
+STEP 4 — Set your URLs
+  - Staff tablet bookmark: https://your-app.onrender.com
+  - Manager dashboard: https://your-app.onrender.com/manager.html
+
+STEP 5 — Change the manager PIN
+  In server.js, find this line:
+    await db.execute(`INSERT OR IGNORE INTO users (id,...) VALUES ('manager',...)`, [managerPin]);
+  The default manager login PIN is: admin1234
+  Change this by updating the user in the database via the manager dashboard.
+
+=====================================================
+STAFF PINS — DEFAULT
+=====================================================
+
+All staff default PIN: 1234
+Change each staff member's PIN from the Manager Dashboard → Manage Staff
+
+Give each staff member their own PIN — do not share PINs.
+
+=====================================================
+HOW TO USE — DAILY
+=====================================================
+
+STAFF (on tablet):
+  1. Open the tablet browser to your app URL
+  2. Tap their name
+  3. Enter 4-digit PIN
+  4. Select shift (Morning / Afternoon / Evening)
+  5. Work through tasks — tick sub-tasks, add notes, take photos
+  6. Mark each task complete
+  7. Submit daily report at end of shift
+
+YOU (on phone from anywhere):
+  1. Open browser on phone
+  2. Go to: https://your-app.onrender.com/manager.html
+  3. Enter manager PIN
+  4. Dashboard shows both stores live — refreshes every 60 seconds
+
+=====================================================
+MANAGER DASHBOARD FEATURES
+=====================================================
+
+LIVE DASHBOARD:
+  - Combined completion % for both stores
+  - NG8 and DE65 completion separately with progress bars
+  - Total penalties accrued today
+  - Staff activity — who has done what
+  - Recent activity feed — every task completion in real time
+  - Active penalties with one-tap waive button
+
+MANAGE TASKS:
+  - See all tasks for both stores
+  - Add a new task — fills in instantly on staff tablets
+  - Edit any task — name, description, time window, penalty amount
+  - Remove a task — disappears from staff view immediately
+  - All with no code changes needed — done through the dashboard
+
+MANAGE STAFF:
+  - See all staff across both sites
+  - Add new staff member — name, site, role, PIN, colour
+  - Edit staff details or reset their PIN
+  - Remove a staff member
+
+PENALTIES:
+  - View all penalties for any date
+  - See which staff member triggered which penalty and why
+  - One-tap waive button — records who waived it and when
+
+HISTORY:
+  - Full task completion history — 7, 14 or 30 days
+  - Filter by site
+  - See every missed task and every penalty
+
+EVIDENCE PHOTOS:
+  - View all photos uploaded by staff for any date and site
+  - Click any photo to view full size
+  - Temperature logs, float counts, delivery notes, lock-up evidence
+
+=====================================================
+IMPORTANT NOTES
+=====================================================
+
+1. The free Render plan "sleeps" after 15 minutes of inactivity.
+   The first person to open the app may wait 30-60 seconds.
+   To prevent this, upgrade to Render Starter ($7/month).
+
+2. All data is stored in a database file on the server.
+   Render free plan resets this on redeploy.
+   For permanent data storage, add a free Turso database:
+   - Go to turso.tech, create a free database
+   - Set DB_URL environment variable in Render to your Turso URL
+
+3. Change all default PINs immediately before giving to staff.
+
+4. The manager PIN (admin1234) should be known only to you.
+   Staff PINs should be individual and private.
+
+=====================================================
+CONTACT & SUPPORT
+=====================================================
+
+If you need help with any of these steps, Claude can walk
+you through each one. Just ask.
