@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Express Savers — Staff Tasks</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0D2137;--blue:#1A3F6F;--mid:#2E6DA4;--accent:#00C2FF;--green:#00C896;--green-d:#007A5A;--amber:#FFB700;--amber-d:#7F5A00;--red:#FF3B3B;--red-d:#8B0000;--white:#fff;--off:#F4F7FC;--border:#D8E4F0;--text:#1A2B3C;--muted:#6B84A0;--card:#fff;--radius:16px;--radius-sm:10px;--shadow:0 2px 16px rgba(13,33,55,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.hidden{display:none!important;}
+
+/* SCREENS */
+.screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;gap:20px;}
+
+/* LOGIN */
+.logo{font-size:28px;font-weight:900;color:#fff;text-align:center;letter-spacing:-.5px;}
+.logo span{color:var(--accent);}
+.sub{font-size:14px;color:var(--muted);text-align:center;}
+.staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:420px;}
+.staff-btn{background:var(--blue);border:2px solid rgba(255,255,255,.08);border-radius:var(--radius-sm);padding:16px;cursor:pointer;transition:all .2s;text-align:center;}
+.staff-btn:hover{border-color:var(--accent);}
+.staff-btn:active{transform:scale(.96);}
+.avatar{width:46px;height:46px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;}
+.staff-name{font-size:13px;font-weight:600;color:#fff;}
+.staff-role{font-size:11px;color:var(--muted);margin-top:2px;}
+.shift-row{display:flex;gap:8px;width:100%;max-width:420px;}
+.shift-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;text-align:center;}
+.shift-btn.active{background:var(--mid);color:#fff;border-color:var(--mid);}
+.pin-screen{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;}
+.pin-name{font-size:18px;font-weight:700;color:#fff;text-align:center;}
+.pin-row{display:flex;gap:10px;justify-content:center;}
+.pin-btn{width:72px;height:72px;border-radius:50%;background:var(--blue);border:2px solid rgba(255,255,255,.1);font-size:22px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace;}
+.pin-btn:active{transform:scale(.92);background:var(--mid);}
+.pin-display{display:flex;gap:10px;justify-content:center;margin-bottom:8px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.15);transition:background .2s;}
+.pin-dot.filled{background:var(--accent);}
+.pin-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;text-align:center;}
+.pin-error{color:var(--red);font-size:13px;text-align:center;font-weight:600;}
+
+/* TOP BAR */
+.topbar{background:var(--navy);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,.07);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.topbar-name{font-size:13px;font-weight:600;color:#fff;}
+.topbar-site{font-size:11px;color:var(--accent);font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.clock{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);}
+.logout-btn{background:rgba(255,255,255,.07);border:none;border-radius:20px;padding:4px 10px;font-size:11px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* SHELL */
+.shell{background:var(--off);min-height:calc(100vh - 56px);border-radius:20px 20px 0 0;}
+
+/* PROGRESS */
+.prog-header{background:var(--navy);padding:12px 16px 16px;}
+.prog-row{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:5px;}
+.prog-row strong{color:var(--accent);}
+.prog-bar{height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden;}
+.prog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--mid),var(--accent));transition:width .5s cubic-bezier(.34,1.56,.64,1);}
+.penalty-alert{background:rgba(255,59,59,.15);border:1px solid rgba(255,59,59,.3);border-radius:var(--radius-sm);padding:8px 14px;font-size:12px;color:var(--red);font-weight:600;margin-top:8px;display:none;}
+
+/* NAV */
+.nav{display:flex;background:#fff;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex:1;min-width:72px;padding:10px 6px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:3px solid transparent;transition:all .2s;text-transform:uppercase;letter-spacing:.04em;}
+.nav-btn.active{color:var(--mid);border-bottom-color:var(--mid);}
+.nav-btn-icon{font-size:18px;}
+
+/* PANEL */
+.panel{display:none;padding:14px;}
+.panel.active{display:block;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
+.sec-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--border);color:var(--muted);}
+.sec-badge.ok{background:rgba(0,200,150,.12);color:var(--green-d);}
+.sec-badge.warn{background:rgba(255,183,0,.12);color:var(--amber-d);}
+.sec-badge.bad{background:rgba(255,59,59,.1);color:var(--red);}
+
+/* TASK CARD */
+.task-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;border:2px solid var(--border);overflow:hidden;transition:border-color .2s;}
+.task-card.done{border-color:var(--green);background:rgba(0,200,150,.03);}
+.task-card.crit{border-left:4px solid var(--red);}
+.task-hdr{display:flex;align-items:center;padding:13px 14px;gap:12px;cursor:pointer;}
+.task-chk{width:28px;height:28px;flex-shrink:0;border-radius:50%;border:2px solid var(--border);background:var(--off);display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .25s cubic-bezier(.34,1.56,.64,1);}
+.task-card.done .task-chk{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 0 0 4px rgba(0,200,150,.15);}
+.task-inf{flex:1;min-width:0;}
+.task-nm{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.task-card.done .task-nm{text-decoration:line-through;color:var(--muted);}
+.task-meta{display:flex;align-items:center;gap:6px;margin-top:2px;flex-wrap:wrap;}
+.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.tag-time{color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;}
+.tag-pen{background:rgba(255,59,59,.1);color:var(--red);}
+.tag-req{background:rgba(255,183,0,.1);color:var(--amber-d);}
+.task-arrow{font-size:14px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.task-card.expanded .task-arrow{transform:rotate(180deg);}
+
+/* TASK BODY */
+.task-body{display:none;padding:0 14px 14px;border-top:1px solid var(--off);padding-top:12px;}
+.task-card.expanded .task-body{display:block;}
+.task-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.subtask-list{margin-bottom:12px;}
+.sub-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--off);cursor:pointer;}
+.sub-item:last-child{border:none;}
+.sub-chk{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);background:var(--off);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .2s;}
+.sub-item.checked .sub-chk{background:var(--green);border-color:var(--green);color:#fff;}
+.sub-lbl{font-size:13px;color:var(--text);flex:1;}
+.sub-item.checked .sub-lbl{text-decoration:line-through;color:var(--muted);}
+.upload-area{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;margin-bottom:10px;cursor:pointer;position:relative;transition:all .2s;}
+.upload-area:active{border-color:var(--mid);}
+.upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:24px;margin-bottom:4px;}
+.upload-txt{font-size:13px;font-weight:600;color:var(--mid);}
+.upload-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;}
+.photo-thumb{aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--off);position:relative;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-del{position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;cursor:pointer;border:none;}
+.notes{width:100%;background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:none;height:68px;margin-bottom:10px;transition:border-color .2s;}
+.notes:focus{outline:none;border-color:var(--mid);}
+.pen-rule{background:rgba(255,59,59,.05);border:1px solid rgba(255,59,59,.18);border-radius:var(--radius-sm);padding:10px;font-size:12px;color:var(--red);line-height:1.5;margin-bottom:10px;}
+.complete-btn{width:100%;padding:12px;border-radius:var(--radius-sm);border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;background:var(--mid);color:#fff;}
+.complete-btn:active{transform:scale(.97);}
+.complete-btn.done{background:var(--green);}
+.saving-ind{font-size:11px;color:var(--accent);text-align:center;margin-top:6px;height:14px;}
+
+/* PENALTIES PANEL */
+.pen-card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:10px;border:2px solid var(--border);}
+.pen-card.active-pen{border-color:var(--red);background:rgba(255,59,59,.02);}
+.pen-card.cleared{border-color:var(--green);background:rgba(0,200,150,.02);}
+.pen-hdr{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.pen-icon{font-size:24px;}
+.pen-title{font-size:14px;font-weight:700;color:var(--text);}
+.pen-task{font-size:12px;color:var(--muted);margin-top:2px;}
+.pen-amount{font-size:22px;font-weight:900;font-family:'DM Mono',monospace;color:var(--red);margin:8px 0 4px;}
+.pen-amount.cleared{color:var(--green);}
+.pen-rule-box{font-size:12px;color:var(--muted);line-height:1.5;padding:8px;background:var(--off);border-radius:var(--radius-sm);}
+.pen-status{font-size:12px;font-weight:700;margin-top:8px;}
+.pen-status.trig{color:var(--red);}
+.pen-status.clear{color:var(--green);}
+.pen-status.pend{color:var(--amber-d);}
+
+/* SUMMARY */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.sum-stat{background:#fff;border-radius:var(--radius);padding:14px;border:2px solid var(--border);text-align:center;}
+.sum-val{font-size:30px;font-weight:900;font-family:'DM Mono',monospace;line-height:1;}
+.sum-val.g{color:var(--green-d);}
+.sum-val.r{color:var(--red);}
+.sum-val.a{color:var(--amber-d);}
+.sum-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+.rep-card{background:#fff;border-radius:var(--radius);padding:16px;border:2px solid var(--border);margin-bottom:12px;}
+.rep-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.rep-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--off);font-size:13px;}
+.rep-row:last-child{border:none;}
+.rep-status{font-weight:700;font-size:12px;}
+.rep-status.done{color:var(--green-d);}
+.rep-status.pen{color:var(--red);}
+.rep-status.pend{color:var(--amber-d);}
+.submit-btn{width:100%;padding:14px;border-radius:var(--radius);border:none;background:var(--navy);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:10px;}
+.submit-btn:active{transform:scale(.97);}
+.submit-btn.submitted{background:var(--green-d);}
+.sec-btn{width:100%;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;white-space:nowrap;z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,.1);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.g{background:var(--green-d);}
+.toast.r{background:var(--red-d);}
+.toast.a{background:var(--amber-d);}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--muted);font-size:14px;gap:8px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--mid);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen">
+  <div>
+    <div class="logo">Express <span>Savers</span></div>
+    <div class="sub" style="margin-top:6px;">Staff Task Manager</div>
+  </div>
+  <div class="shift-row" id="shiftRow">
+    <button class="shift-btn active" onclick="setShift('morning',this)">🌅 Morning</button>
+    <button class="shift-btn" onclick="setShift('afternoon',this)">☀️ Afternoon</button>
+    <button class="shift-btn" onclick="setShift('evening',this)">🌙 Evening</button>
+  </div>
+  <div class="sub">Select your name</div>
+  <div class="staff-grid" id="staffGrid"></div>
+</div>
+
+<!-- PIN SCREEN -->
+<div id="pinScreen" class="screen hidden">
+  <div class="pin-screen">
+    <div class="pin-name" id="pinName"></div>
+    <div class="sub">Enter your 4-digit PIN</div>
+    <div class="pin-display" id="pinDisplay">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-error hidden" id="pinError">Incorrect PIN. Try again.</div>
+    <div class="pin-row">
+      <button class="pin-btn" onclick="pinTap(1)">1</button>
+      <button class="pin-btn" onclick="pinTap(2)">2</button>
+      <button class="pin-btn" onclick="pinTap(3)">3</button>
+    </div>
+    <div class="pin-row">
+      <button class="pin-btn" onclick="pinTap(4)">4</button>
+      <button class="pin-btn" onclick="pinTap(5)">5</button>
+      <button class="pin-btn" onclick="pinTap(6)">6</button>
+    </div>
+    <div class="pin-row">
+      <button class="pin-btn" onclick="pinTap(7)">7</button>
+      <button class="pin-btn" onclick="pinTap(8)">8</button>
+      <button class="pin-btn" onclick="pinTap(9)">9</button>
+    </div>
+    <div class="pin-row">
+      <button class="pin-btn" onclick="pinClear()" style="font-size:16px;">⌫</button>
+      <button class="pin-btn" onclick="pinTap(0)">0</button>
+      <button class="pin-btn" onclick="pinSubmit()" style="background:var(--mid);font-size:16px;">✓</button>
+    </div>
+    <button class="pin-back" onclick="backToStaff()">← Back</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-avatar" id="appAvatar"></div>
+      <div>
+        <div class="topbar-name" id="appName"></div>
+        <div class="topbar-site" id="appSite"></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="clock" id="clock"></div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="prog-header">
+      <div class="prog-row">
+        <span id="progText">0 of 0 tasks</span>
+        <strong id="progPct">0%</strong>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="penalty-alert" id="penAlert"></div>
+    </div>
+
+    <div class="nav">
+      <button class="nav-btn active" onclick="goTab('opening')" id="nav-opening">
+        <span class="nav-btn-icon">🌅</span>Opening
+      </button>
+      <button class="nav-btn" onclick="goTab('midday')" id="nav-midday">
+        <span class="nav-btn-icon">☀️</span>Midday
+      </button>
+      <button class="nav-btn" onclick="goTab('closing')" id="nav-closing">
+        <span class="nav-btn-icon">🌙</span>Closing
+      </button>
+      <button class="nav-btn" onclick="goTab('penalties')" id="nav-penalties">
+        <span class="nav-btn-icon">⚠️</span>Penalties
+      </button>
+      <button class="nav-btn" onclick="goTab('summary')" id="nav-summary">
+        <span class="nav-btn-icon">📋</span>Report
+      </button>
+    </div>
+
+    <div class="panel active" id="panel-opening">
+      <div class="sec-head"><div class="sec-title">Opening Tasks</div><div class="sec-badge warn" id="badge-opening">-/-</div></div>
+      <div id="tasks-opening"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="panel" id="panel-midday">
+      <div class="sec-head"><div class="sec-title">Midday Tasks</div><div class="sec-badge warn" id="badge-midday">-/-</div></div>
+      <div id="tasks-midday"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="panel" id="panel-closing">
+      <div class="sec-head"><div class="sec-title">Closing Tasks</div><div class="sec-badge warn" id="badge-closing">-/-</div></div>
+      <div id="tasks-closing"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="panel" id="panel-penalties">
+      <div class="sec-head"><div class="sec-title">Penalty Tracker</div><div class="sec-badge bad" id="badge-penalties">£0</div></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Penalty tasks must be completed on time. Missed tasks result in a wage deduction as per your employment contract. All penalties are reviewed by the director weekly.</p>
+      <div id="pen-list"></div>
+    </div>
+    <div class="panel" id="panel-summary">
+      <div class="sec-head"><div class="sec-title">Daily Report</div></div>
+      <div class="sum-grid" id="sumGrid"></div>
+      <div class="rep-card"><div class="rep-title">All Tasks — Today</div><div id="repRows"></div></div>
+      <button class="submit-btn" id="submitBtn" onclick="submitReport()">📤 Submit Report to Manager</button>
+      <button class="sec-btn" onclick="logout()">🔄 End Shift / Switch Staff</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let token = null, user = null, shift = 'morning';
+let allTasks = {}, allSubtasks = {}, completions = {}, photos = {};
+let saveTimers = {};
+let allUsers = [];
+
+// ── CLOCK ──────────────────────────────────────
+setInterval(()=>{
+  const el=document.getElementById('clock');
+  if(el) el.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+},1000);
+
+// ── USERS ─────────────────────────────────────
+async function loadUsers(){
+  const r = await fetch(`${API}/api/users`);
+  allUsers = await r.json();
+  buildStaffGrid();
+}
+
+function buildStaffGrid(){
+  const grid = document.getElementById('staffGrid');
+  grid.innerHTML='';
+  const site_users = allUsers.filter(u=>!u.is_manager);
+  site_users.forEach(u=>{
+    const btn=document.createElement('button');
+    btn.className='staff-btn';
+    btn.onclick=()=>selectUser(u);
+    const init=u.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    btn.innerHTML=`<div class="avatar" style="background:${u.color}">${init}</div><div class="staff-name">${u.name}</div><div class="staff-role">${u.role} — ${u.site}</div>`;
+    grid.appendChild(btn);
+  });
+}
+
+function setShift(s, btn){
+  shift=s;
+  document.querySelectorAll('.shift-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+let pendingUser=null;
+let pinVal='';
+
+function selectUser(u){
+  pendingUser=u;
+  pinVal='';
+  updatePinDisplay();
+  document.getElementById('pinName').textContent=u.name;
+  document.getElementById('pinError').classList.add('hidden');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('pinScreen').classList.remove('hidden');
+}
+
+function backToStaff(){
+  document.getElementById('pinScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+function pinTap(n){
+  if(pinVal.length>=4) return;
+  pinVal+=String(n);
+  updatePinDisplay();
+  if(pinVal.length===4) setTimeout(pinSubmit,120);
+}
+
+function pinClear(){
+  pinVal=pinVal.slice(0,-1);
+  updatePinDisplay();
+}
+
+function updatePinDisplay(){
+  for(let i=0;i<4;i++){
+    document.getElementById(`pd${i}`).className='pin-dot'+(i<pinVal.length?' filled':'');
+  }
+}
+
+async function pinSubmit(){
+  if(pinVal.length!==4) return;
+  document.getElementById('pinError').classList.add('hidden');
+  const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:pendingUser.id,pin:pinVal})});
+  const data=await r.json();
+  if(!r.ok){pinVal='';updatePinDisplay();document.getElementById('pinError').classList.remove('hidden');return;}
+  token=data.token; user=data.user;
+  document.getElementById('pinScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  initApp();
+}
+
+// ── APP ──────────────────────────────────────
+async function initApp(){
+  const init=user.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  document.getElementById('appAvatar').textContent=init;
+  document.getElementById('appAvatar').style.background=allUsers.find(u=>u.id===user.id)?.color||'#1A3F6F';
+  document.getElementById('appName').textContent=user.name;
+  document.getElementById('appSite').textContent=`${user.site} — ${shift.charAt(0).toUpperCase()+shift.slice(1)} Shift`;
+  await loadTasksAndCompletions();
+}
+
+async function loadTasksAndCompletions(){
+  const [tRes, cRes] = await Promise.all([
+    fetch(`${API}/api/tasks/${user.site}`,{headers:{Authorization:`Bearer ${token}`}}),
+    fetch(`${API}/api/completions/${user.site}/${todayStr()}`,{headers:{Authorization:`Bearer ${token}`}})
+  ]);
+  const tData=await tRes.json();
+  const cData=await cRes.json();
+
+  allTasks={opening:[],midday:[],closing:[]};
+  allSubtasks={};
+  tData.tasks.forEach(t=>{
+    if(allTasks[t.shift]) allTasks[t.shift].push(t);
+    allSubtasks[t.id]=[];
+  });
+  tData.subtasks.forEach(s=>{ if(allSubtasks[s.task_id]) allSubtasks[s.task_id].push(s); });
+
+  completions={};
+  cData.completions.forEach(c=>{ completions[c.task_id]=c; });
+
+  photos={};
+  cData.photos.forEach(p=>{
+    if(!photos[p.completion_id]) photos[p.completion_id]=[];
+    photos[p.completion_id].push(p);
+  });
+
+  ['opening','midday','closing'].forEach(buildShiftPanel);
+  buildPenPanel();
+  updateProgress();
+}
+
+function todayStr(){return new Date().toISOString().split('T')[0];}
+
+function buildShiftPanel(sh){
+  const container=document.getElementById(`tasks-${sh}`);
+  container.innerHTML='';
+  const tasks=allTasks[sh]||[];
+  tasks.forEach(t=>container.appendChild(makeCard(t,sh)));
+  updateBadge(sh);
+}
+
+function makeCard(task, sh){
+  const comp=completions[task.id];
+  const isDone=comp?.is_done;
+  const card=document.createElement('div');
+  card.className=`task-card${isDone?' done':''}${task.critical?' crit':''}`;
+  card.id=`card-${task.id}`;
+
+  const subs=allSubtasks[task.id]||[];
+  const subHtml=subs.length?`<div class="subtask-list">${subs.map((s,i)=>{
+    const subComps=comp?fetchSubComps(comp.id,s.id):false;
+    return `<div class="sub-item${subComps?' checked':''}" onclick="toggleSub('${task.id}','${s.id}',this)">
+      <div class="sub-chk">${subComps?'✓':''}</div>
+      <div class="sub-lbl">${s.label}</div></div>`;
+  }).join('')}</div>`:'';
+
+  let photosHtml='';
+  if(task.requires_photo){
+    const compPhotos=comp?photos[comp.id]||[]:[];
+    const thumbs=compPhotos.map(p=>`<div class="photo-thumb"><img src="${p.filename.startsWith('http')?p.filename:'/uploads/'+p.filename}"><button class="photo-del" onclick="delPhoto('${task.id}','${p.id}')">✕</button></div>`).join('');
+    photosHtml=`<div class="photo-grid" id="thumbs-${task.id}">${thumbs}</div>
+    <div class="upload-area"><input type="file" accept="image/*" capture="environment" multiple onchange="uploadPhotos('${task.id}',this)">
+    <div class="upload-icon">📷</div><div class="upload-txt">Take Photo / Upload Evidence</div>
+    <div class="upload-sub">${task.photo_label||'Upload evidence'}</div></div>`;
+  }
+
+  const penRule=task.penalty?`<div class="pen-rule">⚠ <strong>Penalty Rule:</strong> ${task.penalty_rule}</div>`:'';
+  const metaTags=`<span class="tag tag-time">${task.time_window}</span>${task.penalty?`<span class="tag tag-pen">⚠ Penalty £${task.penalty_amount}</span>`:''}${task.critical?`<span class="tag tag-req">Required</span>`:''}`;
+
+  card.innerHTML=`
+    <div class="task-hdr" onclick="toggleExpand('${task.id}')">
+      <div class="task-chk" onclick="event.stopPropagation();quickDone('${task.id}','${sh}')">${isDone?'✓':''}</div>
+      <div class="task-inf">
+        <div class="task-nm">${task.name}</div>
+        <div class="task-meta">${metaTags}</div>
+      </div>
+      <div class="task-arrow">▾</div>
+    </div>
+    <div class="task-body">
+      <div class="task-desc">${task.description||''}</div>
+      ${subHtml}
+      ${photosHtml}
+      <textarea class="notes" placeholder="Notes, temperatures, discrepancies…" onchange="saveNotes('${task.id}','${sh}',this.value)">${comp?.notes||''}</textarea>
+      ${penRule}
+      <button class="complete-btn${isDone?' done':''}" id="btn-${task.id}" onclick="markDone('${task.id}','${sh}')">
+        ${isDone?'✅ Completed — Tap to undo':'✓ Mark as Complete'}
+      </button>
+      <div class="saving-ind" id="saving-${task.id}"></div>
+    </div>`;
+  return card;
+}
+
+// SubComps are stored in completions data — check cData
+let subCompMap={};
+function fetchSubComps(compId, subtaskId){
+  return subCompMap[`${compId}__${subtaskId}`]||false;
+}
+
+function toggleExpand(id){
+  document.getElementById(`card-${id}`).classList.toggle('expanded');
+}
+
+function quickDone(id,sh){
+  const comp=completions[id];
+  if(!comp?.is_done) markDone(id,sh);
+}
+
+async function markDone(id,sh){
+  const comp=completions[id]||{};
+  const nowDone=!comp.is_done;
+  // Save/create completion
+  setSaving(id,'Saving…');
+  const cId=await saveCompletion(id,sh,nowDone,comp.notes||'');
+  if(!completions[id]) completions[id]={task_id:id,id:cId,is_done:nowDone,notes:''};
+  else completions[id].is_done=nowDone;
+  setSaving(id,'');
+  refreshCard(id,sh);
+  updateProgress();
+  updateBadge(sh);
+  buildPenPanel();
+  buildSummary();
+  showToast(nowDone?'✅ Task completed!':'↩ Unmarked','g');
+}
+
+async function saveCompletion(taskId,sh,isDone,notes){
+  const r=await fetch(`${API}/api/completions`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+    body:JSON.stringify({task_id:taskId,shift:sh,is_done:isDone,notes})});
+  const d=await r.json();
+  if(!completions[taskId]) completions[taskId]={task_id:taskId,is_done:isDone,notes};
+  completions[taskId].id=d.id;
+  return d.id;
+}
+
+function saveNotes(id,sh,val){
+  if(completions[id]) completions[id].notes=val;
+  clearTimeout(saveTimers[id]);
+  setSaving(id,'Saving…');
+  saveTimers[id]=setTimeout(async()=>{
+    await saveCompletion(id,sh,completions[id]?.is_done||false,val);
+    setSaving(id,'✓ Saved');
+    setTimeout(()=>setSaving(id,''),1500);
+  },800);
+}
+
+function setSaving(id,msg){
+  const el=document.getElementById(`saving-${id}`);
+  if(el) el.textContent=msg;
+}
+
+async function toggleSub(taskId,subId,el){
+  const comp=completions[taskId];
+  if(!comp?.id){
+    // Create completion first
+    const cId=await saveCompletion(taskId,'opening',false,'');
+    completions[taskId]={task_id:taskId,id:cId,is_done:false,notes:''};
+  }
+  const compId=completions[taskId].id;
+  const key=`${compId}__${subId}`;
+  const nowChecked=!subCompMap[key];
+  subCompMap[key]=nowChecked;
+  el.classList.toggle('checked',nowChecked);
+  el.querySelector('.sub-chk').textContent=nowChecked?'✓':'';
+  el.querySelector('.sub-lbl').style.textDecoration=nowChecked?'line-through':'none';
+  await fetch(`${API}/api/completions/${compId}/subtask`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({subtask_id:subId,checked:nowChecked})});
+}
+
+async function uploadPhotos(taskId,input){
+  const comp=completions[taskId];
+  let compId=comp?.id;
+  if(!compId){
+    compId=await saveCompletion(taskId,getTaskShift(taskId),false,'');
+    completions[taskId]={task_id:taskId,id:compId,is_done:false,notes:''};
+  }
+  const grid=document.getElementById(`thumbs-${taskId}`);
+  for(const file of input.files){
+    const fd=new FormData();
+    fd.append('photo',file);
+    setSaving(taskId,'Uploading…');
+    const r=await fetch(`${API}/api/completions/${compId}/photo`,{method:'POST',headers:{Authorization:`Bearer ${token}`},body:fd});
+    const d=await r.json();
+    if(!photos[compId]) photos[compId]=[];
+    photos[compId].push({id:d.id,filename:d.url,completion_id:compId});
+    const thumb=document.createElement('div');
+    thumb.className='photo-thumb';
+    thumb.innerHTML=`<img src="${d.url}"><button class="photo-del" onclick="delPhoto('${taskId}','${d.id}')">✕</button>`;
+    grid.appendChild(thumb);
+    setSaving(taskId,'✓ Photo saved');
+    setTimeout(()=>setSaving(taskId,''),1500);
+    showToast('📷 Photo uploaded','g');
+  }
+  input.value='';
+}
+
+async function delPhoto(taskId,photoId){
+  await fetch(`${API}/api/photos/${photoId}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+  const comp=completions[taskId];
+  if(comp && photos[comp.id]) photos[comp.id]=photos[comp.id].filter(p=>p.id!==photoId);
+  refreshCard(taskId,getTaskShift(taskId));
+  showToast('🗑 Photo removed','a');
+}
+
+function getTaskShift(id){
+  for(const sh of ['opening','midday','closing']){
+    if((allTasks[sh]||[]).find(t=>t.id===id)) return sh;
+  }
+  return 'opening';
+}
+
+function refreshCard(id,sh){
+  const old=document.getElementById(`card-${id}`);
+  const task=(allTasks[sh]||[]).find(t=>t.id===id);
+  if(!old||!task) return;
+  const wasExp=old.classList.contains('expanded');
+  const newCard=makeCard(task,sh);
+  if(wasExp) newCard.classList.add('expanded');
+  old.replaceWith(newCard);
+}
+
+// ── PROGRESS ──────────────────────────────────
+function updateProgress(){
+  let total=0,done=0;
+  ['opening','midday','closing'].forEach(sh=>{(allTasks[sh]||[]).forEach(t=>{total++;if(completions[t.id]?.is_done)done++;});});
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progText').textContent=`${done} of ${total} tasks complete`;
+  document.getElementById('progPct').textContent=pct+'%';
+}
+
+function updateBadge(sh){
+  const tasks=allTasks[sh]||[];
+  const done=tasks.filter(t=>completions[t.id]?.is_done).length;
+  const b=document.getElementById(`badge-${sh}`);
+  b.textContent=`${done}/${tasks.length}`;
+  b.className='sec-badge '+(done===tasks.length?'ok':done>0?'warn':'bad');
+}
+
+// ── PENALTIES ─────────────────────────────────
+function buildPenPanel(){
+  const list=document.getElementById('pen-list');
+  list.innerHTML='';
+  let total=0;
+  ['opening','midday','closing'].forEach(sh=>{
+    (allTasks[sh]||[]).forEach(task=>{
+      if(!task.penalty) return;
+      const comp=completions[task.id];
+      const isDone=comp?.is_done;
+      const waived=comp?.penalty_waived;
+      const cleared=isDone||waived;
+      const now=new Date();
+      const hhmm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      // Simple time-based trigger for display
+      const triggered=!cleared;
+      if(triggered) total+=task.penalty_amount;
+
+      const card=document.createElement('div');
+      card.className=`pen-card${cleared?' cleared':triggered?' active-pen':''}`;
+      card.innerHTML=`
+        <div class="pen-hdr">
+          <div class="pen-icon">${cleared?'✅':triggered?'🔴':'⏳'}</div>
+          <div><div class="pen-title">${task.name}</div><div class="pen-task">${task.time_window} — ${sh}</div></div>
+        </div>
+        <div class="pen-amount${cleared?' cleared':''}">${cleared?'Cleared':'£'+task.penalty_amount+' at risk'}</div>
+        <div class="pen-rule-box">${task.penalty_rule}</div>
+        <div class="pen-status ${cleared?'clear':'pend'}">${cleared?'✅ Task completed — penalty cleared':'⏳ Complete this task to clear the penalty'}</div>`;
+      list.appendChild(card);
+    });
+  });
+  document.getElementById('badge-penalties').textContent=total>0?`£${total} at risk`:'All clear';
+  const alert=document.getElementById('penAlert');
+  if(total>0){alert.textContent=`⚠ £${total} in penalties at risk — complete outstanding tasks`;alert.style.display='block';}
+  else alert.style.display='none';
+}
+
+// ── SUMMARY ───────────────────────────────────
+function buildSummary(){
+  let total=0,done=0,pens=0,penAmt=0;
+  ['opening','midday','closing'].forEach(sh=>{
+    (allTasks[sh]||[]).forEach(t=>{
+      total++;
+      if(completions[t.id]?.is_done) done++;
+      if(t.penalty && !completions[t.id]?.is_done){pens++;penAmt+=t.penalty_amount;}
+    });
+  });
+  document.getElementById('sumGrid').innerHTML=`
+    <div class="sum-stat"><div class="sum-val g">${done}</div><div class="sum-lbl">Done</div></div>
+    <div class="sum-stat"><div class="sum-val ${total-done>0?'r':'g'}">${total-done}</div><div class="sum-lbl">Outstanding</div></div>
+    <div class="sum-stat"><div class="sum-val ${pens>0?'r':'g'}">${pens}</div><div class="sum-lbl">Penalties</div></div>
+    <div class="sum-stat"><div class="sum-val ${penAmt>0?'r':'g'}">£${penAmt}</div><div class="sum-lbl">At Risk</div></div>`;
+
+  const rows=document.getElementById('repRows');
+  rows.innerHTML='';
+  ['opening','midday','closing'].forEach(sh=>{
+    (allTasks[sh]||[]).forEach(t=>{
+      const done=completions[t.id]?.is_done;
+      const hasPen=t.penalty&&!done;
+      const row=document.createElement('div');
+      row.className='rep-row';
+      row.innerHTML=`<span>${t.name}</span><span class="rep-status ${done?'done':hasPen?'pen':'pend'}">${done?'✅ Done':hasPen?'⚠ Penalty risk':'◯ Pending'}</span>`;
+      rows.appendChild(row);
+    });
+  });
+}
+
+async function submitReport(){
+  buildSummary();
+  const btn=document.getElementById('submitBtn');
+  btn.classList.add('submitted');
+  btn.textContent='✅ Report Submitted to Manager';
+  showToast('📤 Report submitted','g');
+}
+
+// ── NAV ───────────────────────────────────────
+function goTab(tab){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+  document.getElementById(`nav-${tab}`).classList.add('active');
+  if(tab==='summary') buildSummary();
+  if(tab==='penalties') buildPenPanel();
+}
+
+// ── TOAST ─────────────────────────────────────
+let toastT;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function logout(){
+  token=null; user=null;
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  completions={}; photos={}; subCompMap={};
+  pinVal='';
+}
+
+loadUsers();
+</script>
+</body>
+</html>

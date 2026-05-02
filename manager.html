@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Express Savers — Manager Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0D2137;--blue:#1A3F6F;--mid:#2E6DA4;--accent:#00C2FF;--green:#00C896;--green-d:#007A5A;--amber:#FFB700;--amber-d:#7F5A00;--red:#FF3B3B;--red-d:#8B0000;--white:#fff;--off:#F4F7FC;--border:#D8E4F0;--text:#1A2B3C;--muted:#6B84A0;--radius:16px;--radius-sm:10px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);min-height:100vh;}
+.hidden{display:none!important;}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:24px;}
+.login-box{background:var(--blue);border-radius:24px;padding:32px;width:100%;max-width:360px;text-align:center;}
+.login-logo{font-size:24px;font-weight:900;color:#fff;margin-bottom:4px;}
+.login-logo span{color:var(--accent);}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.login-inp{width:100%;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:#fff;margin-bottom:10px;transition:border-color .2s;}
+.login-inp::placeholder{color:var(--muted);}
+.login-inp:focus{outline:none;border-color:var(--accent);}
+.login-btn{width:100%;padding:13px;background:var(--mid);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.login-btn:hover{background:#3A8CD4;}
+.login-err{color:var(--red);font-size:13px;margin-top:8px;font-weight:600;}
+
+/* LAYOUT */
+.sidebar{width:220px;background:var(--navy);min-height:100vh;padding:20px 0;position:fixed;left:0;top:0;z-index:100;display:flex;flex-direction:column;}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sidebar-logo-text{font-size:16px;font-weight:900;color:#fff;}
+.sidebar-logo-text span{color:var(--accent);}
+.sidebar-logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;transition:all .2s;border-left:3px solid transparent;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05);}
+.nav-item.active{color:#fff;border-left-color:var(--accent);background:rgba(255,255,255,.06);}
+.nav-icon{font-size:18px;width:24px;text-align:center;}
+.sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.07);}
+.signout-btn{width:100%;background:rgba(255,255,255,.07);border:none;border-radius:var(--radius-sm);padding:9px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+
+.main{margin-left:220px;padding:28px;min-height:100vh;}
+.page{display:none;}
+.page.active{display:block;}
+.page-title{font-size:24px;font-weight:900;color:var(--navy);margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);padding:20px;border:1px solid var(--border);margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:18px;border:1px solid var(--border);}
+.stat-val{font-size:36px;font-weight:900;font-family:'DM Mono',monospace;line-height:1;color:var(--text);}
+.stat-val.g{color:var(--green-d);}
+.stat-val.r{color:var(--red);}
+.stat-val.a{color:var(--amber-d);}
+.stat-lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:5px;}
+.stat-site{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;display:inline-block;margin-top:6px;}
+.stat-site.ng8{background:rgba(46,109,164,.1);color:var(--blue);}
+.stat-site.de65{background:rgba(91,44,141,.1);color:#5B2C8D;}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+/* PROGRESS BAR */
+.prog-bar{height:8px;border-radius:8px;background:var(--border);overflow:hidden;margin-top:6px;}
+.prog-fill{height:100%;border-radius:8px;transition:width .5s;}
+.prog-fill.ng8{background:linear-gradient(90deg,var(--mid),var(--accent));}
+.prog-fill.de65{background:linear-gradient(90deg,#7B3F8C,#C472FF);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--off);}
+.tbl tr:last-child td{border:none;}
+.tbl tr:hover td{background:var(--off);}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block;}
+.badge-green{background:rgba(0,200,150,.12);color:var(--green-d);}
+.badge-red{background:rgba(255,59,59,.1);color:var(--red);}
+.badge-amber{background:rgba(255,183,0,.1);color:var(--amber-d);}
+.badge-blue{background:rgba(46,109,164,.1);color:var(--blue);}
+.badge-purple{background:rgba(91,44,141,.1);color:#5B2C8D;}
+
+/* FORM */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block;}
+.form-inp{width:100%;background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);transition:border-color .2s;}
+.form-inp:focus{outline:none;border-color:var(--mid);}
+.form-inp[type=checkbox]{width:auto;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-textarea{width:100%;background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical;min-height:72px;}
+.form-textarea:focus{outline:none;border-color:var(--mid);}
+.form-select{width:100%;background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+.btn{padding:10px 20px;border-radius:var(--radius-sm);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--mid);color:#fff;}
+.btn-primary:hover{background:#3A8CD4;}
+.btn-success{background:var(--green-d);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-secondary{background:var(--off);color:var(--muted);border:1px solid var(--border);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(13,33,55,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;margin-top:-4px;}
+
+/* ACTIVITY */
+.activity-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--off);}
+.activity-item:last-child{border:none;}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.activity-dot.done{background:var(--green);}
+.activity-dot.pen{background:var(--red);}
+.activity-text{font-size:13px;color:var(--text);flex:1;}
+.activity-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+
+/* STAFF CARD */
+.staff-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--off);}
+.staff-row:last-child{border:none;}
+.s-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.s-info{flex:1;}
+.s-name{font-size:14px;font-weight:600;color:var(--text);}
+.s-meta{font-size:12px;color:var(--muted);margin-top:1px;}
+.s-actions{display:flex;gap:6px;}
+
+/* DATE PICKER */
+.date-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.date-inp{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+
+/* SUBTASK INPUT */
+.subtask-input-row{display:flex;gap:8px;margin-bottom:8px;}
+.subtask-list-edit{margin-bottom:12px;}
+.subtask-item-edit{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--off);}
+.subtask-item-edit:last-child{border:none;}
+.subtask-item-edit span{flex:1;font-size:13px;color:var(--text);}
+
+/* PHOTO MODAL */
+.photo-grid-mgr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.photo-thumb-mgr{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;}
+.photo-thumb-mgr img{width:100%;height:100%;object-fit:cover;transition:transform .2s;}
+.photo-thumb-mgr:hover img{transform:scale(1.05);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{width:100%;min-height:auto;position:relative;flex-direction:row;flex-wrap:wrap;padding:10px;}
+  .main{margin-left:0;}
+  .two-col{grid-template-columns:1fr;}
+}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(60px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,.1);}
+.toast.show{transform:translateY(0);}
+.toast.g{background:var(--green-d);}
+.toast.r{background:var(--red-d);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">Express <span>Savers</span></div>
+    <div class="login-sub">Manager Dashboard — Director Access</div>
+    <input class="login-inp" type="password" id="loginPin" placeholder="Enter manager PIN" maxlength="20" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign In as Manager</button>
+    <div class="login-err hidden" id="loginErr">Incorrect PIN. Try again.</div>
+    <div style="margin-top:16px;font-size:12px;color:var(--muted);">Staff login: <a href="/" style="color:var(--accent);">Staff App →</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashWrap" class="hidden" style="display:flex;">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Express <span>Savers</span></div>
+      <div class="sidebar-logo-sub">Manager Dashboard</div>
+    </div>
+    <div class="nav-item active" onclick="goPage('dashboard',this)"><span class="nav-icon">📊</span>Live Dashboard</div>
+    <div class="nav-item" onclick="goPage('tasks',this)"><span class="nav-icon">✅</span>Manage Tasks</div>
+    <div class="nav-item" onclick="goPage('staff',this)"><span class="nav-icon">👥</span>Manage Staff</div>
+    <div class="nav-item" onclick="goPage('penalties',this)"><span class="nav-icon">⚠️</span>Penalties</div>
+    <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📅</span>History</div>
+    <div class="nav-item" onclick="goPage('photos',this)"><span class="nav-icon">📷</span>Evidence Photos</div>
+    <div class="sidebar-bottom">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="sidebarUser"></div>
+      <button class="signout-btn" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Live Dashboard</div>
+      <div class="page-sub">Real-time view of both stores — refreshes every 60 seconds</div>
+      <div class="date-row">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Viewing date:</label>
+        <input class="date-inp" type="date" id="dashDate" onchange="loadDashboard()">
+        <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+      </div>
+      <div id="dashContent"><div style="color:var(--muted);font-size:14px;">Loading...</div></div>
+    </div>
+
+    <!-- TASKS PAGE -->
+    <div class="page" id="page-tasks">
+      <div class="page-title">Manage Tasks</div>
+      <div class="page-sub">Add, edit or remove tasks for both stores. Changes take effect immediately.</div>
+      <div class="btn-row" style="margin-bottom:20px;">
+        <button class="btn btn-primary" onclick="showAddTask()">+ Add New Task</button>
+        <select class="form-select" style="width:auto;" onchange="filterTasks(this.value)" id="taskFilter">
+          <option value="ALL">All Sites</option>
+          <option value="NG8">NG8 Nottingham</option>
+          <option value="DE65">DE65 Derby</option>
+        </select>
+      </div>
+      <div id="tasksList"></div>
+    </div>
+
+    <!-- STAFF PAGE -->
+    <div class="page" id="page-staff">
+      <div class="page-title">Manage Staff</div>
+      <div class="page-sub">Add, edit or remove staff members. Set names, roles, sites and PINs.</div>
+      <button class="btn btn-primary" onclick="showAddStaff()" style="margin-bottom:20px;">+ Add New Staff Member</button>
+      <div class="card"><div id="staffList"></div></div>
+    </div>
+
+    <!-- PENALTIES PAGE -->
+    <div class="page" id="page-penalties">
+      <div class="page-title">Penalty Tracker</div>
+      <div class="page-sub">Review all penalties for today. Waive penalties where appropriate.</div>
+      <div class="date-row">
+        <input class="date-inp" type="date" id="penDate" onchange="loadPenalties()">
+        <button class="btn btn-secondary btn-sm" onclick="loadPenalties()">🔄 Refresh</button>
+      </div>
+      <div id="penContent"></div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="page-history">
+      <div class="page-title">History</div>
+      <div class="page-sub">Task completion history across both sites.</div>
+      <div class="date-row">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Last</label>
+        <select class="form-select" style="width:auto;" id="histDays" onchange="loadHistory()">
+          <option value="7">7 days</option>
+          <option value="14">14 days</option>
+          <option value="30">30 days</option>
+        </select>
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">days</label>
+        <select class="form-select" style="width:auto;" id="histSite" onchange="loadHistory()">
+          <option value="">Both sites</option>
+          <option value="NG8">NG8 only</option>
+          <option value="DE65">DE65 only</option>
+        </select>
+      </div>
+      <div id="histContent"></div>
+    </div>
+
+    <!-- PHOTOS PAGE -->
+    <div class="page" id="page-photos">
+      <div class="page-title">Evidence Photos</div>
+      <div class="page-sub">View all photos uploaded by staff as task evidence.</div>
+      <div class="date-row">
+        <input class="date-inp" type="date" id="photoDate" onchange="loadPhotos()">
+        <select class="form-select" style="width:auto;" id="photoSite" onchange="loadPhotos()">
+          <option value="NG8">NG8</option>
+          <option value="DE65">DE65</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="loadPhotos()">🔄 Load</button>
+      </div>
+      <div id="photoContent"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="taskModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+    <div class="modal-title" id="taskModalTitle">Add Task</div>
+    <div class="modal-sub">This task will appear for staff on the tablet app immediately.</div>
+    <input type="hidden" id="taskModalId">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Site</label>
+        <select class="form-select" id="tSite"><option value="NG8">NG8 Nottingham</option><option value="DE65">DE65 Derby</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shift</label>
+        <select class="form-select" id="tShift"><option value="opening">Opening</option><option value="midday">Midday</option><option value="closing">Closing</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Task Name</label><input class="form-inp" id="tName" placeholder="e.g. Temperature Check"></div>
+    <div class="form-group"><label class="form-label">Description (shown to staff)</label><textarea class="form-textarea" id="tDesc" placeholder="What the staff member needs to do…"></textarea></div>
+    <div class="form-group"><label class="form-label">Time Window</label><input class="form-inp" id="tTime" placeholder="e.g. 7:00am – 8:00am"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label"><input type="checkbox" id="tPenalty" onchange="togglePenFields()"> Has Penalty</label>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><input type="checkbox" id="tCritical"> Mark as Critical</label>
+      </div>
+    </div>
+    <div id="penFields" class="hidden">
+      <div class="form-group"><label class="form-label">Penalty Amount (£)</label><input class="form-inp" type="number" id="tPenAmt" placeholder="10"></div>
+      <div class="form-group"><label class="form-label">Penalty Rule (shown to staff in red)</label><textarea class="form-textarea" id="tPenRule" placeholder="What happens if this is missed…"></textarea></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label"><input type="checkbox" id="tPhoto" onchange="togglePhotoLabel()"> Requires Photo Evidence</label>
+      </div>
+    </div>
+    <div class="form-group hidden" id="photoLabelField"><label class="form-label">Photo Label (what to photograph)</label><input class="form-inp" id="tPhotoLabel" placeholder="e.g. Photo of temperature display"></div>
+    <div class="form-group">
+      <label class="form-label">Sub-tasks / Checklist Items</label>
+      <div class="subtask-input-row">
+        <input class="form-inp" id="subInput" placeholder="Add a checklist item…" style="flex:1">
+        <button class="btn btn-secondary btn-sm" onclick="addSubtask()">+ Add</button>
+      </div>
+      <div class="subtask-list-edit" id="subtaskList"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+      <button class="btn btn-secondary" onclick="closeModal('taskModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="staffModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('staffModal')">✕</button>
+    <div class="modal-title" id="staffModalTitle">Add Staff Member</div>
+    <div class="modal-sub">Staff can log in using their 4-digit PIN on the tablet app.</div>
+    <input type="hidden" id="staffModalId">
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-inp" id="sName" placeholder="e.g. Jane Smith"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Site</label>
+        <select class="form-select" id="sSite"><option value="NG8">NG8 Nottingham</option><option value="DE65">DE65 Derby</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" id="sRole"><option value="Senior">Senior</option><option value="Standard">Standard</option><option value="Part-time">Part-time</option><option value="PO/Senior">PO/Senior</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">PIN (4 digits)</label><input class="form-inp" type="password" id="sPin" placeholder="Enter 4-digit PIN" maxlength="4"></div>
+    <div class="form-group"><label class="form-label">Colour (for avatar)</label><input class="form-inp" type="color" id="sColor" value="#1A3F6F"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveStaff()">Save Staff Member</button>
+      <button class="btn btn-secondary" onclick="closeModal('staffModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='';
+let token=null, managerUser=null;
+let allTasksData=[], allStaffData=[], subtasksEditing=[];
+let refreshInterval=null;
+
+async function doLogin(){
+  const pin=document.getElementById('loginPin').value;
+  const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:'manager',pin})});
+  const d=await r.json();
+  if(!r.ok){document.getElementById('loginErr').classList.remove('hidden');return;}
+  token=d.token; managerUser=d.user;
+  document.getElementById('loginWrap').classList.add('hidden');
+  document.getElementById('dashWrap').classList.remove('hidden');
+  document.getElementById('dashWrap').style.display='flex';
+  document.getElementById('sidebarUser').textContent='Signed in as Director';
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('dashDate').value=today;
+  document.getElementById('penDate').value=today;
+  document.getElementById('photoDate').value=today;
+  loadDashboard();
+  refreshInterval=setInterval(loadDashboard,60000);
+}
+
+function signOut(){
+  clearInterval(refreshInterval);
+  token=null;
+  document.getElementById('dashWrap').classList.add('hidden');
+  document.getElementById('loginWrap').classList.remove('hidden');
+}
+
+function goPage(id, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`page-${id}`).classList.add('active');
+  if(el) el.classList.add('active');
+  if(id==='tasks') loadTasks();
+  if(id==='staff') loadStaff();
+  if(id==='penalties') loadPenalties();
+  if(id==='history') loadHistory();
+  if(id==='photos') loadPhotos();
+}
+
+function hdr(){return {Authorization:`Bearer ${token}`};}
+
+// ── DASHBOARD ─────────────────────────────────
+async function loadDashboard(){
+  const date=document.getElementById('dashDate').value;
+  const r=await fetch(`${API}/api/manager/dashboard?date=${date}`,{headers:hdr()});
+  const d=await r.json();
+  const ng8Pct=d.ng8.total?Math.round(d.ng8.done/d.ng8.total*100):0;
+  const de65Pct=d.de65.total?Math.round(d.de65.done/d.de65.total*100):0;
+  const combDone=d.ng8.done+d.de65.done;
+  const combTotal=d.ng8.total+d.de65.total;
+  const combPct=combTotal?Math.round(combDone/combTotal*100):0;
+  const penTotal=d.penalties.reduce((s,p)=>s+(p.penalty_amount||0),0);
+
+  document.getElementById('dashContent').innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-val ${combPct===100?'g':combPct>50?'a':'r'}">${combPct}%</div>
+        <div class="stat-lbl">Combined completion</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--muted)">${combDone} of ${combTotal} tasks done</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val ${ng8Pct===100?'g':ng8Pct>50?'a':'r'}">${ng8Pct}%</div>
+        <div class="stat-lbl">NG8 Nottingham</div>
+        <span class="stat-site ng8">Family Shopper</span>
+        <div class="prog-bar" style="margin-top:8px;"><div class="prog-fill ng8" style="width:${ng8Pct}%"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${d.ng8.done}/${d.ng8.total} tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val ${de65Pct===100?'g':de65Pct>50?'a':'r'}">${de65Pct}%</div>
+        <div class="stat-lbl">DE65 Derby</div>
+        <span class="stat-site de65">Nisa / Post Office</span>
+        <div class="prog-bar" style="margin-top:8px;"><div class="prog-fill de65" style="width:${de65Pct}%"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">${d.de65.done}/${d.de65.total} tasks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val ${penTotal>0?'r':'g'}">£${penTotal}</div>
+        <div class="stat-lbl">Penalties accrued</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${d.penalties.length} penalty event${d.penalties.length!==1?'s':''}</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Staff Activity Today</div>
+        ${d.staff_activity.length?d.staff_activity.map(s=>`
+          <div class="activity-item">
+            <div class="activity-dot done"></div>
+            <div class="activity-text"><strong>${s.name}</strong> — ${s.site} — ${s.tasks_done} task${s.tasks_done!==1?'s':''} completed</div>
+          </div>`).join(''):'<div style="color:var(--muted);font-size:13px;">No activity yet today</div>'}
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        ${d.recent_activity.length?d.recent_activity.map(a=>`
+          <div class="activity-item">
+            <div class="activity-dot ${a.is_done?'done':'pen'}"></div>
+            <div class="activity-text"><strong>${a.user_name}</strong> — ${a.task_name} <span class="badge ${a.is_done?'badge-green':'badge-red'}">${a.is_done?'Done':'Undone'}</span></div>
+            <div class="activity-time">${a.completed_at?new Date(a.completed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>
+          </div>`).join(''):'<div style="color:var(--muted);font-size:13px;">No recent activity</div>'}
+      </div>
+    </div>
+    ${d.penalties.length?`<div class="card">
+      <div class="card-title" style="color:var(--red);">⚠ Active Penalties Today</div>
+      <table class="tbl"><thead><tr><th>Staff</th><th>Site</th><th>Task</th><th>Amount</th><th>Action</th></tr></thead><tbody>
+      ${d.penalties.map(p=>`<tr>
+        <td><strong>${p.user_name}</strong></td>
+        <td><span class="badge badge-${p.site==='NG8'?'blue':'purple'}">${p.site}</span></td>
+        <td>${p.task_name}</td>
+        <td style="color:var(--red);font-weight:700;">£${p.penalty_amount}</td>
+        <td><button class="btn btn-success btn-sm" onclick="waivePen('${p.id}')">Waive</button></td>
+      </tr>`).join('')}
+      </tbody></table>
+    </div>`:''}`;
+}
+
+// ── TASKS ─────────────────────────────────────
+async function loadTasks(){
+  const r=await fetch(`${API}/api/manager/tasks`,{headers:hdr()});
+  allTasksData=await r.json();
+  renderTasks(document.getElementById('taskFilter').value);
+}
+
+function filterTasks(site){renderTasks(site);}
+
+function renderTasks(site='ALL'){
+  const filtered=allTasksData.filter(t=>site==='ALL'||t.site===site);
+  const shifts={opening:[],midday:[],closing:[]};
+  filtered.forEach(t=>{if(shifts[t.shift])shifts[t.shift].push(t);});
+  let html='';
+  ['opening','midday','closing'].forEach(sh=>{
+    if(!shifts[sh].length) return;
+    html+=`<div class="card"><div class="card-title">${sh.charAt(0).toUpperCase()+sh.slice(1)} Tasks</div>
+    <table class="tbl"><thead><tr><th>Site</th><th>Task Name</th><th>Time</th><th>Penalty</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+    ${shifts[sh].map(t=>`<tr>
+      <td><span class="badge badge-${t.site==='NG8'?'blue':'purple'}">${t.site}</span></td>
+      <td><strong>${t.name}</strong>${t.critical?` <span class="badge badge-red">Critical</span>`:''}</td>
+      <td style="font-size:12px;color:var(--muted);">${t.time_window||'—'}</td>
+      <td>${t.penalty?`<span class="badge badge-red">£${t.penalty_amount}</span>`:'<span style="color:var(--muted)">None</span>'}</td>
+      <td><span class="badge ${t.active?'badge-green':'badge-amber'}">${t.active?'Active':'Inactive'}</span></td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="editTask(${t.id})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="archiveTask('${t.id}')">Remove</button>
+      </td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+  });
+  document.getElementById('tasksList').innerHTML=html||'<div style="color:var(--muted);">No tasks found.</div>';
+}
+
+function showAddTask(){
+  subtasksEditing=[];
+  document.getElementById('taskModalTitle').textContent='Add New Task';
+  document.getElementById('taskModalId').value='';
+  ['tName','tDesc','tTime','tPenAmt','tPenRule','tPhotoLabel'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('tSite').value='NG8';
+  document.getElementById('tShift').value='opening';
+  document.getElementById('tPenalty').checked=false;
+  document.getElementById('tCritical').checked=false;
+  document.getElementById('tPhoto').checked=false;
+  document.getElementById('penFields').classList.add('hidden');
+  document.getElementById('photoLabelField').classList.add('hidden');
+  document.getElementById('subtaskList').innerHTML='';
+  document.getElementById('subInput').value='';
+  document.getElementById('taskModal').classList.add('show');
+}
+
+function editTask(id){
+  const t=allTasksData.find(t=>t.id===id);
+  if(!t) return;
+  subtasksEditing=t.subtask_labels?t.subtask_labels.split('||').filter(Boolean):[];
+  document.getElementById('taskModalTitle').textContent='Edit Task';
+  document.getElementById('taskModalId').value=t.id;
+  document.getElementById('tSite').value=t.site;
+  document.getElementById('tShift').value=t.shift;
+  document.getElementById('tName').value=t.name;
+  document.getElementById('tDesc').value=t.description||'';
+  document.getElementById('tTime').value=t.time_window||'';
+  document.getElementById('tPenalty').checked=!!t.penalty;
+  document.getElementById('tCritical').checked=!!t.critical;
+  document.getElementById('tPhoto').checked=!!t.requires_photo;
+  document.getElementById('tPenAmt').value=t.penalty_amount||0;
+  document.getElementById('tPenRule').value=t.penalty_rule||'';
+  document.getElementById('tPhotoLabel').value=t.photo_label||'';
+  document.getElementById('penFields').classList.toggle('hidden',!t.penalty);
+  document.getElementById('photoLabelField').classList.toggle('hidden',!t.requires_photo);
+  renderSubtaskList();
+  document.getElementById('taskModal').classList.add('show');
+}
+
+function togglePenFields(){
+  document.getElementById('penFields').classList.toggle('hidden',!document.getElementById('tPenalty').checked);
+}
+function togglePhotoLabel(){
+  document.getElementById('photoLabelField').classList.toggle('hidden',!document.getElementById('tPhoto').checked);
+}
+
+function addSubtask(){
+  const val=document.getElementById('subInput').value.trim();
+  if(!val) return;
+  subtasksEditing.push(val);
+  document.getElementById('subInput').value='';
+  renderSubtaskList();
+}
+
+function renderSubtaskList(){
+  document.getElementById('subtaskList').innerHTML=subtasksEditing.map((s,i)=>
+    `<div class="subtask-item-edit"><span>${s}</span><button class="btn btn-danger btn-sm" onclick="removeSubtask(${i})">✕</button></div>`
+  ).join('');
+}
+
+function removeSubtask(i){subtasksEditing.splice(i,1);renderSubtaskList();}
+
+async function saveTask(){
+  const id=document.getElementById('taskModalId').value;
+  const body={
+    site:document.getElementById('tSite').value,
+    shift:document.getElementById('tShift').value,
+    name:document.getElementById('tName').value,
+    description:document.getElementById('tDesc').value,
+    time_window:document.getElementById('tTime').value,
+    penalty:document.getElementById('tPenalty').checked,
+    penalty_amount:parseInt(document.getElementById('tPenAmt').value)||0,
+    penalty_rule:document.getElementById('tPenRule').value,
+    requires_photo:document.getElementById('tPhoto').checked,
+    photo_label:document.getElementById('tPhotoLabel').value,
+    critical:document.getElementById('tCritical').checked,
+    subtasks:subtasksEditing,
+    active:true
+  };
+  if(!body.name){showToast('Task name is required','r');return;}
+  const url=id?`${API}/api/manager/tasks/${id}`:`${API}/api/manager/tasks`;
+  const method=id?'PUT':'POST';
+  const r=await fetch(url,{method,headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){closeModal('taskModal');loadTasks();showToast(id?'✅ Task updated':'✅ Task added','g');}
+  else showToast('Error saving task','r');
+}
+
+async function archiveTask(id){
+  if(!confirm('Remove this task? Staff will no longer see it.')) return;
+  await fetch(`${API}/api/manager/tasks/${id}`,{method:'DELETE',headers:hdr()});
+  loadTasks();
+  showToast('Task removed','g');
+}
+
+// ── STAFF ─────────────────────────────────────
+async function loadStaff(){
+  const r=await fetch(`${API}/api/manager/staff`,{headers:hdr()});
+  allStaffData=await r.json();
+  renderStaff();
+}
+
+function renderStaff(){
+  const list=document.getElementById('staffList');
+  list.innerHTML='';
+  allStaffData.filter(s=>!s.is_manager).forEach(s=>{
+    const init=s.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+    const row=document.createElement('div');
+    row.className='staff-row';
+    row.innerHTML=`
+      <div class="s-avatar" style="background:${s.color}">${init}</div>
+      <div class="s-info">
+        <div class="s-name">${s.name}</div>
+        <div class="s-meta">${s.role} — <span class="badge badge-${s.site==='NG8'?'blue':'purple'}">${s.site}</span></div>
+      </div>
+      <div class="s-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editStaff('${s.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteStaff('${s.id}','${s.name}')">Remove</button>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function showAddStaff(){
+  document.getElementById('staffModalTitle').textContent='Add Staff Member';
+  document.getElementById('staffModalId').value='';
+  document.getElementById('sName').value='';
+  document.getElementById('sSite').value='NG8';
+  document.getElementById('sRole').value='Standard';
+  document.getElementById('sPin').value='';
+  document.getElementById('sColor').value='#1A3F6F';
+  document.getElementById('staffModal').classList.add('show');
+}
+
+function editStaff(id){
+  const s=allStaffData.find(s=>s.id===id);
+  if(!s) return;
+  document.getElementById('staffModalTitle').textContent='Edit Staff Member';
+  document.getElementById('staffModalId').value=s.id;
+  document.getElementById('sName').value=s.name;
+  document.getElementById('sSite').value=s.site;
+  document.getElementById('sRole').value=s.role;
+  document.getElementById('sPin').value='';
+  document.getElementById('sColor').value=s.color||'#1A3F6F';
+  document.getElementById('staffModal').classList.add('show');
+}
+
+async function saveStaff(){
+  const id=document.getElementById('staffModalId').value;
+  const body={
+    name:document.getElementById('sName').value,
+    site:document.getElementById('sSite').value,
+    role:document.getElementById('sRole').value,
+    pin:document.getElementById('sPin').value||undefined,
+    color:document.getElementById('sColor').value
+  };
+  if(!body.name){showToast('Name is required','r');return;}
+  if(!id && !body.pin){showToast('PIN is required for new staff','r');return;}
+  const url=id?`${API}/api/manager/staff/${id}`:`${API}/api/manager/staff`;
+  const method=id?'PUT':'POST';
+  const r=await fetch(url,{method,headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){closeModal('staffModal');loadStaff();showToast(id?'✅ Staff updated':'✅ Staff added','g');}
+  else showToast('Error saving staff','r');
+}
+
+async function deleteStaff(id,name){
+  if(!confirm(`Remove ${name}? This cannot be undone.`)) return;
+  await fetch(`${API}/api/manager/staff/${id}`,{method:'DELETE',headers:hdr()});
+  loadStaff();
+  showToast(`${name} removed`,'g');
+}
+
+// ── PENALTIES ─────────────────────────────────
+async function loadPenalties(){
+  const date=document.getElementById('penDate').value;
+  const r=await fetch(`${API}/api/manager/dashboard?date=${date}`,{headers:hdr()});
+  const d=await r.json();
+  const cont=document.getElementById('penContent');
+  if(!d.penalties.length){cont.innerHTML='<div class="card" style="color:var(--green-d);font-weight:600;">✅ No penalties recorded for this date.</div>';return;}
+  const total=d.penalties.reduce((s,p)=>s+(p.penalty_amount||0),0);
+  cont.innerHTML=`<div class="card"><div style="font-size:15px;font-weight:700;color:var(--red);margin-bottom:14px;">Total penalties: £${total}</div>
+    <table class="tbl"><thead><tr><th>Staff Member</th><th>Site</th><th>Task</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    ${d.penalties.map(p=>`<tr>
+      <td><strong>${p.user_name}</strong></td>
+      <td><span class="badge badge-${p.site==='NG8'?'blue':'purple'}">${p.site}</span></td>
+      <td>${p.task_name}</td>
+      <td style="color:var(--red);font-weight:700;">£${p.penalty_amount}</td>
+      <td><span class="badge ${p.penalty_waived?'badge-green':'badge-red'}">${p.penalty_waived?'Waived':'Active'}</span></td>
+      <td>${!p.penalty_waived?`<button class="btn btn-success btn-sm" onclick="waivePen('${p.id}')">Waive</button>`:'<span style="color:var(--muted);">Waived by '+p.waived_by+'</span>'}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+async function waivePen(id){
+  await fetch(`${API}/api/completions/${id}/penalty`,{method:'POST',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify({triggered:true,waived:true})});
+  loadDashboard();
+  loadPenalties();
+  showToast('✅ Penalty waived','g');
+}
+
+// ── HISTORY ───────────────────────────────────
+async function loadHistory(){
+  const days=document.getElementById('histDays').value;
+  const site=document.getElementById('histSite').value;
+  let url=`${API}/api/manager/history?days=${days}`;
+  if(site) url+=`&site=${site}`;
+  const r=await fetch(url,{headers:hdr()});
+  const data=await r.json();
+  if(!data.length){document.getElementById('histContent').innerHTML='<div class="card" style="color:var(--muted);">No history found.</div>';return;}
+  document.getElementById('histContent').innerHTML=`<div class="card">
+    <table class="tbl"><thead><tr><th>Date</th><th>Site</th><th>Staff</th><th>Task</th><th>Status</th><th>Penalty</th></tr></thead><tbody>
+    ${data.map(r=>`<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${r.date}</td>
+      <td><span class="badge badge-${r.site==='NG8'?'blue':'purple'}">${r.site}</span></td>
+      <td>${r.user_name}</td>
+      <td style="font-size:12px;">${r.task_name}</td>
+      <td><span class="badge ${r.is_done?'badge-green':'badge-amber'}">${r.is_done?'Done':'Missed'}</span></td>
+      <td>${r.penalty_triggered?`<span class="badge ${r.penalty_waived?'badge-amber':'badge-red'}">${r.penalty_waived?'Waived':'£'+r.penalty_amount}</span>`:'—'}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+// ── PHOTOS ────────────────────────────────────
+async function loadPhotos(){
+  const date=document.getElementById('photoDate').value;
+  const site=document.getElementById('photoSite').value;
+  const r=await fetch(`${API}/api/completions/${site}/${date}`,{headers:hdr()});
+  const d=await r.json();
+  const cont=document.getElementById('photoContent');
+  if(!d.photos.length){cont.innerHTML='<div class="card" style="color:var(--muted);">No photos uploaded for this date and site.</div>';return;}
+  const grouped={};
+  d.photos.forEach(p=>{
+    const comp=d.completions.find(c=>c.id===p.completion_id);
+    const key=comp?comp.task_id:'unknown';
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push({...p,comp});
+  });
+  let html='';
+  for(const [taskId, ps] of Object.entries(grouped)){
+    const comp=ps[0].comp;
+    html+=`<div class="card"><div class="card-title">${comp?.task_id||taskId} — uploaded by ${comp?.user_name||'Unknown'}</div>
+    <div class="photo-grid-mgr">${ps.map(p=>`<div class="photo-thumb-mgr" onclick="window.open('/uploads/${p.filename}','_blank')"><img src="/uploads/${p.filename}" onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;><rect fill=&quot;%23f0f0f0&quot; width=&quot;100&quot; height=&quot;100&quot;/><text y=&quot;.9em&quot; font-size=&quot;50&quot; x=&quot;50%&quot; text-anchor=&quot;middle&quot;>📷</text></svg>'"></div>`).join('')}
+    </div></div>`;
+  }
+  cont.innerHTML=html;
+}
+
+// ── MODAL ─────────────────────────────────────
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+
+// ── TOAST ─────────────────────────────────────
+let toastT;
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`toast ${type} show`;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+document.getElementById('loginPin').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
