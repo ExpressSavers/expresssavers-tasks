@@ -494,8 +494,8 @@ app.get('/api/manager/backup', managerAuth, async (req, res) => {
 // ── DAILY STATS SUMMARY ───────────────────────────────
 app.get('/api/manager/stats', managerAuth, async (req, res) => {
   const { days=90 } = req.query;
-  const ng8Tasks = await db.execute('SELECT COUNT(*) as total FROM tasks WHERE site='NG8' AND active=1');
-  const de65Tasks = await db.execute('SELECT COUNT(*) as total FROM tasks WHERE site='DE65' AND active=1');
+  const ng8Tasks = await db.execute("SELECT COUNT(*) as total FROM tasks WHERE site='NG8' AND active=1");
+  const de65Tasks = await db.execute("SELECT COUNT(*) as total FROM tasks WHERE site='DE65' AND active=1");
   // Per-day completion rates for last N days
   const daily = await db.execute(`
     SELECT 
