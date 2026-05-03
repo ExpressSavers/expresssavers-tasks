@@ -13,12 +13,20 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'expresssavers-secret-2025-changeme';
 
 // ── DB ────────────────────────────────────────────────
-const db = createClient({
+const db = createClient({ 
   url: process.env.DB_URL || 'file:./tasks.db',
-  authToken: process.env.DB_TOKEN
+  authToken: process.env.DB_TOKEN || undefined
 });
 
 async function initDB() {
+  const dbUrl = process.env.DB_URL;
+  if (!dbUrl || dbUrl === 'file:./tasks.db') {
+    console.warn('⚠️  WARNING: Using local database file. Data will be lost on redeploy.');
+    console.warn('⚠️  Set DB_URL environment variable to a Turso database URL for persistent storage.');
+    console.warn('⚠️  See DEPLOYMENT_GUIDE.txt for instructions.');
+  } else {
+    console.log('✅ Using external database:', dbUrl.split('?')[0]);
+  }
   await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -412,11 +420,125 @@ app.post('/api/manager/waive/:completionId', managerAuth, async (req, res) => {
 });
 
 app.get('/api/manager/history', managerAuth, async (req, res) => {
-  const { site, days=7 } = req.query;
+  const { site, days=90 } = req.query;
   const where = site ? `AND c.site=?` : '';
   const params = site ? [days, site] : [days];
-  const result = await db.execute(`SELECT c.date, c.site, c.task_id, c.is_done, c.penalty_triggered, c.penalty_waived, c.completed_at, u.name as user_name, t.name as task_name, t.penalty_amount FROM completions c JOIN users u ON c.user_id=u.id JOIN tasks t ON c.task_id=t.id WHERE c.date >= date('now','-'||?||' days') ${where} ORDER BY c.date DESC, c.site`, params);
-  res.json(result.rows);
+  // Full task-level history
+  const result = await db.execute(`SELECT c.date, c.site, c.task_id, c.is_done, c.penalty_triggered, c.penalty_waived, c.completed_at, c.notes, u.name as user_name, t.name as task_name, t.shift, t.penalty_amount FROM completions c JOIN users u ON c.user_id=u.id JOIN tasks t ON c.task_id=t.id WHERE c.date >= date('now','-'||?||' days') ${where} ORDER BY c.date DESC, c.site, t.shift, t.sort_order`, params);
+  // Daily summary stats
+  const summary = await db.execute(`SELECT c.date, c.site, COUNT(DISTINCT c.task_id) as tasks_done, COUNT(DISTINCT CASE WHEN c.penalty_triggered=1 AND c.penalty_waived=0 THEN c.id END) as penalties, COUNT(DISTINCT u.id) as staff_active FROM completions c JOIN users u ON c.user_id=u.id WHERE c.date >= date('now','-'||?||' days') ${where} AND c.is_done=1 GROUP BY c.date, c.site ORDER BY c.date DESC`, params);
+  res.json({ rows: result.rows, summary: summary.rows });
+});
+
+// ── ONE-TIME SETUP / RESET ENDPOINT ─────────────────
+// Visit /api/setup?key=expresssavers2025 to initialise/reset the database
+app.get('/api/setup', async (req, res) => {
+  const { key } = req.query;
+  if (key !== 'expresssavers2025') return res.status(403).json({ error: 'Invalid key' });
+  try {
+    await initDB();
+    // Force reset manager PIN to admin1234
+    const managerPin = await bcrypt.hash('admin1234', 10);
+    await db.execute(`INSERT OR REPLACE INTO users (id,name,role,site,pin,is_manager,color) VALUES ('manager','Director','Manager','ALL',?,'1','#0D2137')`, [managerPin]);
+    // Reset all staff PINs to 1234
+    const staffPin = await bcrypt.hash('1234', 10);
+    const staffList = [
+      {id:'ng8_1',name:'Staff Member 1',role:'Senior',site:'NG8',color:'#1A3F6F'},
+      {id:'ng8_2',name:'Staff Member 2',role:'Standard',site:'NG8',color:'#2E6DA4'},
+      {id:'ng8_3',name:'Staff Member 3',role:'Standard',site:'NG8',color:'#00708A'},
+      {id:'ng8_4',name:'Staff Member 4',role:'Part-time',site:'NG8',color:'#7B3F8C'},
+      {id:'ng8_5',name:'Staff Member 5',role:'Part-time',site:'NG8',color:'#1E6B3A'},
+      {id:'de65_1',name:'Staff Member 6',role:'PO/Senior',site:'DE65',color:'#1A3F6F'},
+      {id:'de65_2',name:'Staff Member 7',role:'Standard',site:'DE65',color:'#2E6DA4'},
+      {id:'de65_3',name:'Staff Member 8',role:'Standard',site:'DE65',color:'#00708A'},
+      {id:'de65_4',name:'Staff Member 9',role:'Part-time',site:'DE65',color:'#7B3F8C'},
+      {id:'de65_5',name:'Staff Member 10',role:'Part-time',site:'DE65',color:'#1E6B3A'},
+    ];
+    for (const s of staffList) {
+      await db.execute(`INSERT OR IGNORE INTO users (id,name,role,site,pin,is_manager,color) VALUES (?,?,?,?,?,0,?)`,
+        [s.id, s.name, s.role, s.site, staffPin, s.color]);
+    }
+    const users = await db.execute('SELECT id,name,site,is_manager FROM users');
+    const tasks = await db.execute('SELECT COUNT(*) as c FROM tasks');
+    res.json({
+      success: true,
+      message: 'Database initialised successfully',
+      manager_pin: 'admin1234',
+      staff_pin: '1234',
+      users: users.rows,
+      task_count: tasks.rows[0].c,
+      note: 'You can now log into the manager dashboard with PIN: admin1234'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── BACKUP / EXPORT ──────────────────────────────────
+app.get('/api/manager/backup', managerAuth, async (req, res) => {
+  const users = await db.execute('SELECT id,name,role,site,color,is_manager FROM users');
+  const tasks = await db.execute('SELECT * FROM tasks');
+  const subtasks = await db.execute('SELECT * FROM subtasks');
+  const completions = await db.execute('SELECT * FROM completions ORDER BY date DESC');
+  const photos = await db.execute('SELECT id,completion_id,filename,uploaded_at FROM photos');
+  res.json({
+    exported_at: new Date().toISOString(),
+    users: users.rows,
+    tasks: tasks.rows,
+    subtasks: subtasks.rows,
+    completions: completions.rows,
+    photos: photos.rows
+  });
+});
+
+// ── DAILY STATS SUMMARY ───────────────────────────────
+app.get('/api/manager/stats', managerAuth, async (req, res) => {
+  const { days=90 } = req.query;
+  const ng8Tasks = await db.execute('SELECT COUNT(*) as total FROM tasks WHERE site='NG8' AND active=1');
+  const de65Tasks = await db.execute('SELECT COUNT(*) as total FROM tasks WHERE site='DE65' AND active=1');
+  // Per-day completion rates for last N days
+  const daily = await db.execute(`
+    SELECT 
+      c.date,
+      c.site,
+      COUNT(DISTINCT CASE WHEN c.is_done=1 THEN c.task_id END) as done,
+      COUNT(DISTINCT CASE WHEN c.penalty_triggered=1 AND c.penalty_waived=0 THEN c.id END) as penalties,
+      SUM(CASE WHEN c.penalty_triggered=1 AND c.penalty_waived=0 THEN t.penalty_amount ELSE 0 END) as penalty_total,
+      COUNT(DISTINCT u.id) as staff_count
+    FROM completions c 
+    JOIN users u ON c.user_id=u.id
+    JOIN tasks t ON c.task_id=t.id
+    WHERE c.date >= date('now','-'||?||' days')
+    GROUP BY c.date, c.site 
+    ORDER BY c.date DESC
+  `, [days]);
+  // Top missed tasks
+  const missed = await db.execute(`
+    SELECT t.name, t.site, t.shift, COUNT(*) as miss_count
+    FROM completions c
+    JOIN tasks t ON c.task_id=t.id
+    WHERE c.is_done=0 AND c.date >= date('now','-'||?||' days')
+    GROUP BY c.task_id
+    ORDER BY miss_count DESC
+    LIMIT 10
+  `, [days]);
+  // Best performing staff
+  const topStaff = await db.execute(`
+    SELECT u.name, u.site, u.color,
+      COUNT(CASE WHEN c.is_done=1 THEN 1 END) as tasks_done,
+      COUNT(CASE WHEN c.penalty_triggered=1 AND c.penalty_waived=0 THEN 1 END) as penalties
+    FROM users u
+    LEFT JOIN completions c ON u.id=c.user_id AND c.date >= date('now','-'||?||' days')
+    WHERE u.is_manager=0
+    GROUP BY u.id
+    ORDER BY tasks_done DESC
+  `, [days]);
+  res.json({
+    task_counts: { ng8: ng8Tasks.rows[0].total, de65: de65Tasks.rows[0].total },
+    daily: daily.rows,
+    most_missed: missed.rows,
+    staff_performance: topStaff.rows
+  });
 });
 
 // ── START ─────────────────────────────────────────────
