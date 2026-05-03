@@ -177,10 +177,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" class="screen">
+<div id="storeSelect" class="screen">
   <div>
     <div class="logo">Express <span>Savers</span></div>
-    <div class="sub" style="margin-top:6px;">Staff Task Manager</div>
+    <div class="sub" style="margin-top:6px;">Select your store to begin</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:380px;">
+    <button onclick="filterStoreLogin('NG8')" style="background:var(--blue);border:2px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:20px 24px;cursor:pointer;text-align:left;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+      <div style="font-size:17px;font-weight:700;color:#fff;">🏪 Family Shopper</div>
+      <div style="font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;">NG8 5NB — Nottingham</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">Premier / Booker · Alcohol · Hot Food</div>
+    </button>
+    <button onclick="filterStoreLogin('DE65')" style="background:var(--blue);border:2px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:20px 24px;cursor:pointer;text-align:left;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'">
+      <div style="font-size:17px;font-weight:700;color:#fff;">🏪 Nisa / Post Office</div>
+      <div style="font-size:12px;color:var(--accent);margin-top:4px;font-weight:600;">DE65 6JG — Etwall, Derby</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">Nisa · Post Office · Alcohol</div>
+    </button>
+  </div>
+</div>
+
+<div id="loginScreen" class="screen hidden">
+  <div>
+    <div class="logo">Express <span>Savers</span></div>
+    <div class="sub" style="margin-top:6px;" id="loginStoreLbl">Who is working today?</div>
   </div>
   <div class="shift-row" id="shiftRow">
     <button class="shift-btn active" onclick="setShift('morning',this)">🌅 Morning</button>
@@ -189,6 +208,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
   </div>
   <div class="sub">Select your name</div>
   <div class="staff-grid" id="staffGrid"></div>
+  <button onclick="backToStoreSelect()" style="background:none;border:1px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);color:var(--muted);font-size:13px;padding:9px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;">← Change Store</button>
 </div>
 
 <!-- PIN SCREEN -->
@@ -314,16 +334,26 @@ setInterval(()=>{
 },1000);
 
 // ── USERS ─────────────────────────────────────
+let currentStoreSite = null;
+
+function filterStoreLogin(site){
+  currentStoreSite = site;
+  document.getElementById('storeSelect').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginStoreLbl').textContent = site==='NG8'?'Family Shopper — NG8 Nottingham':'Nisa / Post Office — DE65 Derby';
+  buildStaffGrid();
+}
+
 async function loadUsers(){
   const r = await fetch(`${API}/api/users`);
   allUsers = await r.json();
-  buildStaffGrid();
+  // Show store select first, not staff grid
 }
 
 function buildStaffGrid(){
   const grid = document.getElementById('staffGrid');
   grid.innerHTML='';
-  const site_users = allUsers.filter(u=>!u.is_manager);
+  const site_users = allUsers.filter(u=>!u.is_manager && (!currentStoreSite || u.site===currentStoreSite));
   site_users.forEach(u=>{
     const btn=document.createElement('button');
     btn.className='staff-btn';
@@ -356,6 +386,13 @@ function selectUser(u){
 function backToStaff(){
   document.getElementById('pinScreen').classList.add('hidden');
   document.getElementById('loginScreen').classList.remove('hidden');
+  pinVal=''; updatePinDisplay();
+}
+
+function backToStoreSelect(){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('storeSelect').classList.remove('hidden');
+  currentStoreSite=null;
 }
 
 function pinTap(n){
@@ -728,9 +765,10 @@ function showToast(msg,type=''){
 }
 
 function logout(){
-  token=null; user=null;
+  token=null; user=null; currentStoreSite=null;
   document.getElementById('mainApp').classList.add('hidden');
-  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('storeSelect').classList.remove('hidden');
   completions={}; photos={}; subCompMap={};
   pinVal='';
 }
