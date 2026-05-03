@@ -152,6 +152,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
   .two-col{grid-template-columns:1fr;}
 }
 
+/* MANAGER MESSAGES */
+.mgr-msg-card{background:#fff;border-radius:var(--radius);padding:16px;border:2px solid var(--border);margin-bottom:10px;position:relative;}
+.mgr-msg-card.unread-mgr{border-color:var(--mid);}
+.mgr-msg-card.urgent-mgr{border-color:var(--red);}
+.mgr-msg-card.reply-mgr{border-left:4px solid var(--green);background:rgba(0,200,150,.02);}
+.mgr-msg-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.mgr-msg-sender{font-size:14px;font-weight:700;color:var(--text);}
+.mgr-msg-to{font-size:12px;color:var(--muted);margin-top:2px;}
+.mgr-msg-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+.mgr-msg-subject{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.mgr-msg-body{font-size:14px;color:var(--text);line-height:1.6;}
+.assign-task-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--off);flex-wrap:wrap;}
+.assign-task-row:last-child{border:none;}
+.assign-task-name{font-size:13px;font-weight:600;color:var(--text);flex:1;min-width:180px;}
+.assign-task-shift{font-size:11px;color:var(--muted);text-transform:capitalize;}
+.assign-select{background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);min-width:160px;}
+.perm-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;}
+
 /* TASK DETAIL CARDS */
 .task-detail-card{background:#fff;border-radius:var(--radius);border:2px solid var(--border);margin-bottom:12px;overflow:hidden;transition:border-color .2s;}
 .task-detail-card.done{border-color:var(--green);}
@@ -240,6 +258,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
     <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📋</span>Task Details</div>
     <div class="nav-item" onclick="goPage('histlog',this)"><span class="nav-icon">📅</span>History Log</div>
     <div class="nav-item" onclick="goPage('analytics',this)"><span class="nav-icon">📈</span>Analytics</div>
+    <div class="nav-item" onclick="goPage('messages',this)"><span class="nav-icon">💬</span><span id="msgNavMgr">Messages</span></div>
+    <div class="nav-item" onclick="goPage('assign',this)"><span class="nav-icon">👤</span>Task Assignment</div>
     <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📋</span>Task Details</div>
     <div class="sidebar-bottom">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="sidebarUser"></div>
@@ -351,6 +371,75 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
         <button class="btn btn-primary btn-sm" onclick="downloadBackup()">💾 Download Data Backup</button>
       </div>
       <div id="analyticsContent"><div style="color:var(--muted);font-size:13px;">Select a period and click Refresh.</div></div>
+    </div>
+
+    <!-- MESSAGES PAGE -->
+    <div class="page" id="page-messages">
+      <div class="page-title">Messages</div>
+      <div class="page-sub">Send messages to individual staff, a whole site, or all staff. Staff can reply directly from their tablet.</div>
+
+      <!-- Compose -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-title">✉️ Compose New Message</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Send To</label>
+            <select class="form-select" id="msgTo" onchange="updateMsgTo()">
+              <option value="ALL_ALL">All Staff — Both Stores</option>
+              <option value="SITE_NG8">All Staff — NG8 Nottingham</option>
+              <option value="SITE_DE65">All Staff — DE65 Derby</option>
+              <optgroup label="Individual Staff" id="msgStaffOptions"></optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="msgPriority">
+              <option value="normal">Normal</option>
+              <option value="urgent">⚠ Urgent</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subject (optional)</label>
+          <input class="form-inp" id="msgSubject" placeholder="e.g. Reminder: Temperature logs today">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea class="form-textarea" id="msgBody" style="min-height:100px;" placeholder="Type your message to staff..."></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="sendManagerMessage()">📤 Send Message</button>
+          <button class="btn btn-secondary" onclick="clearCompose()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Message Thread -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div class="card-title" style="margin:0;">All Messages</div>
+          <button class="btn btn-secondary btn-sm" onclick="loadManagerMessages()">🔄 Refresh</button>
+        </div>
+        <div id="mgr-msg-list"></div>
+      </div>
+    </div>
+
+    <!-- TASK ASSIGNMENT PAGE -->
+    <div class="page" id="page-assign">
+      <div class="page-title">Task Assignment</div>
+      <div class="page-sub">Assign specific tasks to specific staff members. Permanent assignments always show that person as responsible. Date assignments are for one day only.</div>
+
+      <div class="date-row">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Site:</label>
+        <select class="form-select" style="width:auto;" id="assignSite" onchange="loadAssignPage()">
+          <option value="NG8">NG8 — Nottingham</option>
+          <option value="DE65">DE65 — Derby</option>
+        </select>
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Date:</label>
+        <input class="date-inp" type="date" id="assignDate">
+        <button class="btn btn-primary btn-sm" onclick="loadAssignPage()">Load Tasks</button>
+      </div>
+
+      <div id="assign-content"></div>
     </div>
 
     <!-- PHOTOS PAGE -->
@@ -517,7 +606,9 @@ async function doLogin(){
     const hd=document.getElementById('histDate');
     if(hd) hd.value=today;
     loadDashboard();
-    refreshInterval=setInterval(()=>{
+    // Poll messages for replies
+setInterval(()=>{ if(token) loadManagerMessages(); }, 120000);
+refreshInterval=setInterval(()=>{
       const selDate=document.getElementById('dashDate')?.value;
       const td=new Date().toISOString().split('T')[0];
       if(selDate===td) loadDashboard();
@@ -528,6 +619,193 @@ async function doLogin(){
     btn.textContent='Sign In as Manager';
     btn.disabled=false;
   }
+}
+
+// ── MANAGER MESSAGING ─────────────────────────────
+let mgrMessages = [];
+
+async function loadManagerMessages(){
+  const r = await fetch(`${API}/api/messages/manager`,{headers:hdr()});
+  const d = await r.json();
+  mgrMessages = d.messages||[];
+
+  // Update nav badge
+  const replies = mgrMessages.filter(m=>m.priority==='reply'&&!m.read_at);
+  const navEl = document.getElementById('msgNavMgr');
+  if(navEl){
+    navEl.innerHTML = replies.length>0?`Messages <span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;vertical-align:middle;">${replies.length}</span>`:'Messages';
+  }
+
+  const list = document.getElementById('mgr-msg-list');
+  if(!list) return;
+  if(!mgrMessages.length){
+    list.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px;">No messages yet. Send your first message above.</div>';
+    return;
+  }
+  list.innerHTML='';
+  mgrMessages.forEach(msg=>{
+    const isReply=msg.priority==='reply';
+    const isUrgent=msg.priority==='urgent';
+    const timeStr=new Date(msg.created_at).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const toLabel=msg.recipient_id==='ALL'||msg.recipient_site==='ALL'?'All Staff':
+      msg.recipient_site?`All ${msg.recipient_site} Staff`:msg.recipient_name||'Unknown';
+
+    const card=document.createElement('div');
+    card.className=`mgr-msg-card${isReply?' reply-mgr':''}${isUrgent?' urgent-mgr':''}`;
+    card.innerHTML=`
+      <div class="mgr-msg-hdr">
+        <div>
+          <div class="mgr-msg-sender">${isReply?'↩ Reply from: '+msg.sender_name:'📤 You → '+toLabel}
+            ${isUrgent?'<span class="badge badge-red">URGENT</span>':''}
+          </div>
+          <div class="mgr-msg-to">${isReply?'In reply to your message':''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="mgr-msg-time">${timeStr}</div>
+          <button onclick="deleteMsg('${msg.id}')" class="btn btn-danger btn-sm" style="padding:4px 8px;">✕</button>
+        </div>
+      </div>
+      ${msg.subject&&!isReply?`<div class="mgr-msg-subject">${msg.subject}</div>`:''}
+      <div class="mgr-msg-body">${msg.body}</div>
+      ${isReply?`<div style="margin-top:10px;">
+        <input class="form-inp" id="reply-mgr-${msg.id}" placeholder="Reply back..." style="margin-bottom:8px;">
+        <button class="btn btn-primary btn-sm" onclick="replyToStaff('${msg.id}','${msg.sender_id}')">↩ Reply</button>
+      </div>`:''}`;
+    list.appendChild(card);
+  });
+}
+
+async function sendManagerMessage(){
+  const toVal=document.getElementById('msgTo').value;
+  const subject=document.getElementById('msgSubject').value;
+  const body=document.getElementById('msgBody').value.trim();
+  const priority=document.getElementById('msgPriority').value;
+  if(!body){showToast('Please type a message','a');return;}
+
+  let payload={subject,body,priority};
+  if(toVal==='ALL_ALL'){payload.recipient_id='ALL';payload.recipient_site='ALL';}
+  else if(toVal.startsWith('SITE_')){payload.recipient_site=toVal.replace('SITE_','');payload.recipient_id=null;}
+  else{payload.recipient_id=toVal;payload.recipient_site=null;}
+
+  await fetch(`${API}/api/messages`,{method:'POST',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  showToast('✅ Message sent','g');
+  clearCompose();
+  await loadManagerMessages();
+}
+
+async function replyToStaff(parentId, recipientId){
+  const input=document.getElementById('reply-mgr-'+parentId);
+  if(!input||!input.value.trim()){showToast('Type a reply first','a');return;}
+  await fetch(`${API}/api/messages/${parentId}/reply`,{
+    method:'POST',headers:{...hdr(),'Content-Type':'application/json'},
+    body:JSON.stringify({body:input.value.trim()})
+  });
+  input.value='';
+  showToast('✅ Reply sent','g');
+  await loadManagerMessages();
+}
+
+async function deleteMsg(id){
+  if(!confirm('Delete this message?')) return;
+  await fetch(`${API}/api/messages/${id}`,{method:'DELETE',headers:hdr()});
+  await loadManagerMessages();
+  showToast('Message deleted','g');
+}
+
+function clearCompose(){
+  document.getElementById('msgBody').value='';
+  document.getElementById('msgSubject').value='';
+  document.getElementById('msgPriority').value='normal';
+  document.getElementById('msgTo').value='ALL_ALL';
+}
+
+function updateMsgTo(){}
+
+function populateMsgStaffOptions(){
+  const sel=document.getElementById('msgStaffOptions');
+  if(!sel||!allStaffData) return;
+  sel.innerHTML='';
+  allStaffData.filter(s=>!s.is_manager).forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.id;
+    opt.textContent=s.name+' ('+s.site+')';
+    sel.appendChild(opt);
+  });
+}
+
+// ── TASK ASSIGNMENT ────────────────────────────────
+async function loadAssignPage(){
+  const site=document.getElementById('assignSite').value;
+  const date=document.getElementById('assignDate').value||new Date().toISOString().split('T')[0];
+  const cont=document.getElementById('assign-content');
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;">Loading...</div>';
+
+  const [taskRes, assignRes, staffRes] = await Promise.all([
+    fetch(`${API}/api/tasks/${site}`,{headers:hdr()}),
+    fetch(`${API}/api/assignments/${site}`,{headers:hdr()}),
+    fetch(`${API}/api/manager/staff`,{headers:hdr()})
+  ]);
+  const taskData=await taskRes.json();
+  const assignments=await assignRes.json();
+  const staff=await staffRes.json();
+
+  const tasks=taskData.tasks||[];
+  const siteStaff=staff.filter(s=>s.site===site&&!s.is_manager);
+
+  const assignByTask={};
+  assignments.forEach(a=>{assignByTask[a.task_id]=a;});
+
+  const shifts={opening:[],midday:[],closing:[]};
+  tasks.forEach(t=>{if(shifts[t.shift])shifts[t.shift].push(t);});
+
+  let html='';
+  ['opening','midday','closing'].forEach(sh=>{
+    if(!shifts[sh].length) return;
+    const emoji={opening:'🌅',midday:'☀️',closing:'🌙'}[sh];
+    html+=`<div class="card" style="margin-bottom:16px;">
+      <div class="card-title">${emoji} ${sh.charAt(0).toUpperCase()+sh.slice(1)} Tasks</div>`;
+    shifts[sh].forEach(task=>{
+      const existing=assignByTask[task.id];
+      const isPerm=existing?.permanent;
+      html+=`<div class="assign-task-row">
+        <div style="flex:1;">
+          <div class="assign-task-name">${task.name}${task.critical?'<span class="badge badge-red" style="margin-left:6px;">Critical</span>':''}</div>
+          <div class="assign-task-shift">${sh} · ${task.time_window||''}</div>
+          ${existing?`<div style="font-size:11px;color:var(--green-d);margin-top:3px;">Currently: ${existing.user_name} ${isPerm?'(permanent)':'(today only)'}</div>`:'<div style="font-size:11px;color:var(--muted);margin-top:3px;">Not assigned — open to any staff</div>'}
+        </div>
+        <select class="assign-select" id="assign-sel-${task.id}" onchange="autoSaveAssign('${task.id}','${site}','${date}',this)">
+          <option value="">— Anyone on shift —</option>
+          ${siteStaff.map(s=>`<option value="${s.id}" ${existing?.user_id===s.id?'selected':''}>${s.name}</option>`).join('')}
+        </select>
+        <label class="perm-toggle">
+          <input type="checkbox" id="perm-${task.id}" ${isPerm?'checked':''} onchange="autoSaveAssign('${task.id}','${site}','${date}',document.getElementById('assign-sel-${task.id}'))">
+          Permanent
+        </label>
+        ${existing?`<button class="btn btn-danger btn-sm" onclick="removeAssign('${existing.id}','${site}','${date}')">✕</button>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  cont.innerHTML=html||'<div class="card" style="color:var(--muted);">No tasks found.</div>';
+}
+
+async function autoSaveAssign(taskId, site, date, selectEl){
+  const userId=selectEl.value;
+  if(!userId) return; // unassigned
+  const permanent=document.getElementById('perm-'+taskId)?.checked||false;
+  await fetch(`${API}/api/assignments`,{
+    method:'POST',headers:{...hdr(),'Content-Type':'application/json'},
+    body:JSON.stringify({task_id:taskId,user_id:userId,site,date,permanent})
+  });
+  showToast('✅ Assignment saved','g');
+  setTimeout(()=>loadAssignPage(),500);
+}
+
+async function removeAssign(assignId, site, date){
+  await fetch(`${API}/api/assignments/${assignId}`,{method:'DELETE',headers:hdr()});
+  showToast('Assignment removed','g');
+  setTimeout(()=>loadAssignPage(),500);
 }
 
 async function loadAnalytics(){
@@ -639,6 +917,8 @@ function goPage(id, el){
   if(id==='histlog') loadHistory();
   if(id==='photos') loadPhotos();
   if(id==='analytics') loadAnalytics();
+  if(id==='messages'){ if(!allStaffData.length) loadStaff().then(()=>{ populateMsgStaffOptions(); loadManagerMessages(); }); else { populateMsgStaffOptions(); loadManagerMessages(); } }
+  if(id==='assign'){ document.getElementById('assignDate').value=new Date().toISOString().split('T')[0]; loadAssignPage(); }
 }
 
 function hdr(){return {Authorization:`Bearer ${token}`};}
