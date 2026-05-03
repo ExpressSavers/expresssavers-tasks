@@ -161,6 +161,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
 .submit-btn.submitted{background:var(--green-d);}
 .sec-btn{width:100%;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
 
+/* MESSAGES */
+.msg-card{background:#fff;border-radius:var(--radius);padding:14px 16px;border:2px solid var(--border);position:relative;}
+.msg-card.unread{border-color:var(--mid);background:rgba(46,109,164,.03);}
+.msg-card.urgent{border-color:var(--red);}
+.msg-card.reply-msg{border-color:var(--green);background:rgba(0,200,150,.02);}
+.msg-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.msg-sender{font-size:13px;font-weight:700;color:var(--text);}
+.msg-time{font-size:11px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;}
+.msg-body{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:10px;}
+.msg-subject{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.msg-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--red);position:absolute;top:14px;right:14px;}
+.msg-priority{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;margin-left:6px;}
+.msg-priority.urgent{background:rgba(255,59,59,.1);color:var(--red);}
+.msg-priority.normal{background:rgba(46,109,164,.1);color:var(--mid);}
+.msg-reply-row{display:flex;gap:8px;margin-top:8px;}
+.msg-reply-input{flex:1;background:var(--off);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+.msg-reply-btn{background:var(--mid);color:#fff;border:none;border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+
+/* ASSIGNED TASK BADGE */
+.assigned-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(46,109,164,.12);color:var(--blue);display:inline-flex;align-items:center;gap:4px;}
+.assigned-you{background:rgba(0,200,150,.12);color:var(--green-d);}
+.msg-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:4px;display:none;}
+
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;white-space:nowrap;z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,.1);}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -286,6 +310,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
       <button class="nav-btn" onclick="goTab('penalties')" id="nav-penalties">
         <span class="nav-btn-icon">⚠️</span>Penalties
       </button>
+      <button class="nav-btn" onclick="goTab('messages')" id="nav-messages">
+        <span class="nav-btn-icon">💬</span><span id="msgNavLabel">Messages</span>
+      </button>
       <button class="nav-btn" onclick="goTab('summary')" id="nav-summary">
         <span class="nav-btn-icon">📋</span>Report
       </button>
@@ -308,6 +335,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
       <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Penalty tasks must be completed on time. Missed tasks result in a wage deduction as per your employment contract. All penalties are reviewed by the director weekly.</p>
       <div id="pen-list"></div>
     </div>
+    <div class="panel" id="panel-messages">
+      <div class="sec-head">
+        <div class="sec-title">Messages</div>
+        <div class="sec-badge" id="badge-messages">Loading...</div>
+      </div>
+      <div id="msg-compose" style="background:#fff;border-radius:var(--radius);padding:14px;border:2px solid var(--border);margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Reply to Manager</div>
+        <textarea id="replyBody" class="notes" placeholder="Type your message to the manager..." style="height:80px;margin-bottom:8px;"></textarea>
+        <button onclick="sendReply()" class="complete-btn" style="background:var(--mid);">📤 Send Message</button>
+      </div>
+      <div id="msg-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+
     <div class="panel" id="panel-summary">
       <div class="sec-head"><div class="sec-title">Daily Report</div></div>
       <div class="sum-grid" id="sumGrid"></div>
@@ -432,7 +472,9 @@ async function initApp(){
   document.getElementById('appAvatar').style.background=allUsers.find(u=>u.id===user.id)?.color||'#1A3F6F';
   document.getElementById('appName').textContent=user.name;
   document.getElementById('appSite').textContent=`${user.site} — ${shift.charAt(0).toUpperCase()+shift.slice(1)} Shift`;
-  await loadTasksAndCompletions();
+  await Promise.all([loadTasksAndCompletions(), loadMessages(), loadAssignments()]);
+  // Poll for new messages every 2 minutes
+  setInterval(loadMessages, 120000);
 }
 
 async function loadTasksAndCompletions(){
@@ -753,6 +795,7 @@ function goTab(tab){
   document.getElementById(`nav-${tab}`).classList.add('active');
   if(tab==='summary') buildSummary();
   if(tab==='penalties') buildPenPanel();
+  if(tab==='messages'){ loadMessages(); }
 }
 
 // ── TOAST ─────────────────────────────────────
@@ -762,6 +805,138 @@ function showToast(msg,type=''){
   t.textContent=msg; t.className=`toast ${type} show`;
   clearTimeout(toastT);
   toastT=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── MESSAGES ─────────────────────────────────────────
+let allMessages = [];
+let lastMsgParentId = null;
+
+async function loadMessages(){
+  if(!token||!user) return;
+  try{
+    const r = await fetch(`${API}/api/messages/${user.id}`,{headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    allMessages = d.messages||[];
+    const unread = d.unread||0;
+    // Update badge
+    const badge = document.getElementById('badge-messages');
+    const navLabel = document.getElementById('msgNavLabel');
+    const msgBadge = document.getElementById('msg-nav-badge');
+    if(badge) badge.textContent = unread > 0 ? unread+' unread' : allMessages.length+' messages';
+    if(badge) badge.className = 'sec-badge '+(unread>0?'bad':'ok');
+    // Show red dot on nav tab if unread
+    if(navLabel && unread > 0){
+      navLabel.innerHTML = 'Messages <span style="background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;vertical-align:middle;">'+unread+'</span>';
+    } else if(navLabel){
+      navLabel.textContent = 'Messages';
+    }
+    renderMessages();
+  }catch(e){ console.log('Message load error:', e); }
+}
+
+function renderMessages(){
+  const list = document.getElementById('msg-list');
+  if(!list) return;
+  if(!allMessages.length){
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">No messages yet.<br>Messages from the manager will appear here.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  allMessages.forEach(msg => {
+    const isReply = msg.priority === 'reply';
+    const isUnread = !msg.read_at && msg.sender_id !== user.id;
+    const isUrgent = msg.priority === 'urgent';
+    const isMine = msg.sender_id === user.id;
+    const initials = (msg.sender_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2);
+    const timeStr = new Date(msg.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+
+    const card = document.createElement('div');
+    card.className = `msg-card${isUnread?' unread':''}${isUrgent?' urgent':''}${isReply?' reply-msg':''}`;
+
+    card.innerHTML = `
+      ${isUnread?'<div class="msg-unread-dot"></div>':''}
+      <div class="msg-hdr">
+        <div class="msg-avatar" style="background:${msg.sender_color||'#1A3F6F'}">${initials}</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="msg-sender">${isMine?'You':msg.sender_name}</span>
+            ${isUrgent?'<span class="msg-priority urgent">⚠ URGENT</span>':''}
+            ${isReply?'<span class="msg-priority normal">↩ Reply</span>':''}
+          </div>
+          <div class="msg-time">${timeStr}</div>
+        </div>
+      </div>
+      ${msg.subject&&!isReply?`<div class="msg-subject">${msg.subject}</div>`:''}
+      <div class="msg-body">${msg.body}</div>
+      ${!isMine?`<div class="msg-reply-row">
+        <input class="msg-reply-input" placeholder="Reply..." id="reply-${msg.id}">
+        <button class="msg-reply-btn" onclick="quickReply('${msg.id}')">↩ Reply</button>
+      </div>`:''}`;
+
+    // Mark as read when expanded
+    if(isUnread){
+      card.addEventListener('click', ()=>{
+        fetch(`${API}/api/messages/${msg.id}/read`,{method:'POST',headers:{Authorization:`Bearer ${token}`}});
+        card.classList.remove('unread');
+        const dot = card.querySelector('.msg-unread-dot');
+        if(dot) dot.remove();
+      });
+    }
+    list.appendChild(card);
+  });
+}
+
+async function quickReply(parentId){
+  const input = document.getElementById('reply-'+parentId);
+  if(!input||!input.value.trim()) return;
+  const body = input.value.trim();
+  try{
+    await fetch(`${API}/api/messages/${parentId}/reply`,{
+      method:'POST',
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({body})
+    });
+    input.value='';
+    showToast('✅ Reply sent to manager','g');
+    await loadMessages();
+  }catch(e){ showToast('Failed to send reply','r'); }
+}
+
+async function sendReply(){
+  const body = document.getElementById('replyBody')?.value?.trim();
+  if(!body){ showToast('Please type a message first','a'); return; }
+  try{
+    await fetch(`${API}/api/messages`,{
+      method:'POST',
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({recipient_id:'manager',subject:'Message from '+user.name,body})
+    });
+    document.getElementById('replyBody').value='';
+    showToast('✅ Message sent to manager','g');
+    await loadMessages();
+  }catch(e){ showToast('Failed to send message','r'); }
+}
+
+// ── TASK ASSIGNMENTS ──────────────────────────────────
+let assignments = [];
+
+async function loadAssignments(){
+  if(!token||!user) return;
+  try{
+    const r = await fetch(`${API}/api/assignments/${user.site}`,{headers:{Authorization:`Bearer ${token}`}});
+    assignments = await r.json();
+  }catch(e){ assignments=[]; }
+}
+
+function getTaskAssignment(taskId){
+  return assignments.find(a=>a.task_id===taskId);
+}
+
+function assignmentBadge(taskId){
+  const a = getTaskAssignment(taskId);
+  if(!a) return '';
+  const isMe = a.user_id === user.id;
+  return `<span class="assigned-badge ${isMe?'assigned-you':''}">${isMe?'👤 Assigned to you':'👤 '+a.user_name}</span>`;
 }
 
 function logout(){
