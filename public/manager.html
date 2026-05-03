@@ -220,7 +220,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
     <div class="login-sub">Manager Dashboard — Director Access</div>
     <input class="login-inp" type="password" id="loginPin" placeholder="Enter manager PIN" maxlength="20" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">Sign In as Manager</button>
-    <div class="login-err hidden" id="loginErr">Incorrect PIN. Try again.</div>
+    <div class="login-err" id="loginErr" style="display:none;color:var(--red);font-size:13px;margin-top:8px;font-weight:600;"></div>
     <div style="margin-top:16px;font-size:12px;color:var(--muted);">Staff login: <a href="/" style="color:var(--accent);">Staff App →</a></div>
   </div>
 </div>
@@ -478,26 +478,56 @@ let refreshInterval=null;
 
 async function doLogin(){
   const pin=document.getElementById('loginPin').value;
-  const r=await fetch(`${API}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:'manager',pin})});
-  const d=await r.json();
-  if(!r.ok){document.getElementById('loginErr').classList.remove('hidden');return;}
-  token=d.token; managerUser=d.user;
-  document.getElementById('loginWrap').classList.add('hidden');
-  document.getElementById('dashWrap').classList.remove('hidden');
-  document.getElementById('dashWrap').style.display='flex';
-  document.getElementById('sidebarUser').textContent='Signed in as Director';
-  const today=new Date().toISOString().split('T')[0];
-  document.getElementById('dashDate').value=today;
-  document.getElementById('penDate').value=today;
-  document.getElementById('photoDate').value=today;
-  const hd=document.getElementById('histDate');
-  if(hd) hd.value=today;
-  loadDashboard();
-  refreshInterval=setInterval(()=>{
-    const selDate=document.getElementById('dashDate')?.value;
-    const td=new Date().toISOString().split('T')[0];
-    if(selDate===td) loadDashboard(); // only auto-refresh when viewing today
-  },60000);
+  const errEl=document.getElementById('loginErr');
+  const btn=document.querySelector('.login-btn');
+  errEl.style.display='none';
+  if(!pin){errEl.textContent='Please enter your PIN.';errEl.style.display='block';return;}
+  btn.textContent='Signing in...';
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:'manager',pin})
+    });
+    const d=await r.json();
+    if(!r.ok){
+      errEl.textContent=d.error==='Wrong PIN'?'Incorrect PIN. Try again.':'Login failed: '+d.error;
+      errEl.style.display='block';
+      btn.textContent='Sign In as Manager';
+      btn.disabled=false;
+      return;
+    }
+    token=d.token; managerUser=d.user;
+    if(!managerUser.is_manager){
+      errEl.textContent='This account does not have manager access.';
+      errEl.style.display='block';
+      btn.textContent='Sign In as Manager';
+      btn.disabled=false;
+      return;
+    }
+    document.getElementById('loginWrap').classList.add('hidden');
+    document.getElementById('dashWrap').classList.remove('hidden');
+    document.getElementById('dashWrap').style.display='flex';
+    document.getElementById('sidebarUser').textContent='Signed in as Director';
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('dashDate').value=today;
+    document.getElementById('penDate').value=today;
+    document.getElementById('photoDate').value=today;
+    const hd=document.getElementById('histDate');
+    if(hd) hd.value=today;
+    loadDashboard();
+    refreshInterval=setInterval(()=>{
+      const selDate=document.getElementById('dashDate')?.value;
+      const td=new Date().toISOString().split('T')[0];
+      if(selDate===td) loadDashboard();
+    },60000);
+  } catch(err){
+    errEl.textContent='Connection error: '+err.message+'. Please try again.';
+    errEl.style.display='block';
+    btn.textContent='Sign In as Manager';
+    btn.disabled=false;
+  }
 }
 
 async function loadAnalytics(){
@@ -1297,7 +1327,6 @@ function viewerNav(dir){
 
 function closeViewer(){
   document.getElementById('viewerOverlay').classList.remove('show');
-}
 }
 
 // ── MODAL ─────────────────────────────────────
