@@ -152,6 +152,58 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
   .two-col{grid-template-columns:1fr;}
 }
 
+/* TASK DETAIL CARDS */
+.task-detail-card{background:#fff;border-radius:var(--radius);border:2px solid var(--border);margin-bottom:12px;overflow:hidden;transition:border-color .2s;}
+.task-detail-card.done{border-color:var(--green);}
+.task-detail-card.missed{border-color:var(--amber);opacity:.85;}
+.task-detail-hdr{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background .15s;}
+.task-detail-hdr:hover{background:var(--off);}
+.task-detail-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.task-detail-icon.done{background:rgba(0,200,150,.15);}
+.task-detail-icon.missed{background:rgba(255,183,0,.15);}
+.task-detail-info{flex:1;min-width:0;}
+.task-detail-name{font-size:15px;font-weight:700;color:var(--text);}
+.task-detail-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;}
+.task-detail-arrow{font-size:14px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.task-detail-card.expanded .task-detail-arrow{transform:rotate(180deg);}
+.task-detail-body{display:none;padding:16px;border-top:1px solid var(--off);}
+.task-detail-card.expanded .task-detail-body{display:block;}
+.detail-section{margin-bottom:14px;}
+.detail-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;}
+.detail-subtask{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--off);font-size:13px;}
+.detail-subtask:last-child{border:none;}
+.detail-subtask-chk{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.detail-subtask-chk.done{background:var(--green);color:#fff;}
+.detail-subtask-chk.not{background:var(--border);}
+.detail-notes{background:var(--off);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);line-height:1.6;}
+.detail-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:8px;}
+.detail-photo{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;}
+.detail-photo img{width:100%;height:100%;object-fit:cover;transition:transform .2s;}
+.detail-photo:hover img{transform:scale(1.05);}
+.detail-photo-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:3px 6px;font-weight:600;}
+.detail-no-photos{font-size:13px;color:var(--muted);font-style:italic;}
+.detail-penalty-box{background:rgba(255,59,59,.05);border:1px solid rgba(255,59,59,.2);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--red);line-height:1.5;}
+.shift-section{margin-bottom:20px;}
+.shift-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.shift-title{font-size:14px;font-weight:700;color:var(--text);}
+.shift-stats{font-size:12px;color:var(--muted);}
+.no-tasks-msg{background:#fff;border-radius:var(--radius);padding:24px;text-align:center;border:2px dashed var(--border);color:var(--muted);font-size:14px;}
+
+/* PHOTO LIGHTBOX */
+.viewer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;}
+.viewer-overlay.show{display:flex;}
+.viewer-img-wrap{position:relative;max-width:90vw;max-height:80vh;display:flex;align-items:center;justify-content:center;}
+.viewer-img-wrap img{max-width:90vw;max-height:78vh;object-fit:contain;border-radius:8px;}
+.viewer-bar{display:flex;align-items:center;gap:16px;margin-top:14px;}
+.viewer-btn{background:rgba(255,255,255,.12);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.viewer-btn:hover{background:rgba(255,255,255,.25);}
+.viewer-title{color:#fff;font-size:14px;font-weight:600;max-width:60vw;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.viewer-count{color:rgba(255,255,255,.6);font-size:12px;font-family:'DM Mono',monospace;}
+.viewer-close{position:absolute;top:16px;right:20px;background:rgba(255,255,255,.12);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.viewer-close:hover{background:rgba(255,255,255,.25);}
+.viewer-open-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;font-family:'DM Sans',sans-serif;}
+.viewer-open-btn:hover{background:rgba(255,255,255,.2);}
+
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;z-index:9999;transform:translateY(60px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);border:1px solid rgba(255,255,255,.1);}
 .toast.show{transform:translateY(0);}
@@ -185,8 +237,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
     <div class="nav-item" onclick="goPage('tasks',this)"><span class="nav-icon">✅</span>Manage Tasks</div>
     <div class="nav-item" onclick="goPage('staff',this)"><span class="nav-icon">👥</span>Manage Staff</div>
     <div class="nav-item" onclick="goPage('penalties',this)"><span class="nav-icon">⚠️</span>Penalties</div>
-    <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📅</span>History</div>
-    <div class="nav-item" onclick="goPage('photos',this)"><span class="nav-icon">📷</span>Evidence Photos</div>
+    <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📋</span>Task Details</div>
+    <div class="nav-item" onclick="goPage('histlog',this)"><span class="nav-icon">📅</span>History Log</div>
+    <div class="nav-item" onclick="goPage('analytics',this)"><span class="nav-icon">📈</span>Analytics</div>
+    <div class="nav-item" onclick="goPage('history',this)"><span class="nav-icon">📋</span>Task Details</div>
     <div class="sidebar-bottom">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="sidebarUser"></div>
       <button class="signout-btn" onclick="signOut()">Sign Out</button>
@@ -204,7 +258,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
         <label style="font-size:13px;font-weight:600;color:var(--muted);">Viewing date:</label>
         <input class="date-inp" type="date" id="dashDate" onchange="loadDashboard()">
         <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('dashDate').value=new Date().toISOString().split('T')[0];loadDashboard();">Today</button>
       </div>
+      <div id="dateBanner" style="display:none;background:#FFF8E1;border:1px solid #FFB700;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;color:#7F5A00;margin-bottom:16px;"></div>
       <div id="dashContent"><div style="color:var(--muted);font-size:14px;">Loading...</div></div>
     </div>
 
@@ -242,25 +298,59 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
       <div id="penContent"></div>
     </div>
 
-    <!-- HISTORY PAGE -->
+    <!-- COMPLETED TASKS PAGE -->
     <div class="page" id="page-history">
-      <div class="page-title">History</div>
-      <div class="page-sub">Task completion history across both sites.</div>
+      <div class="page-title">Completed Tasks</div>
+      <div class="page-sub">Click any task to see notes, checklist and all evidence photos uploaded by staff.</div>
+      <div class="date-row" style="flex-wrap:wrap;gap:10px;">
+        <input class="date-inp" type="date" id="histDate" onchange="loadCompletedTasks()">
+        <select class="form-select" style="width:auto;" id="histSite" onchange="loadCompletedTasks()">
+          <option value="NG8">NG8 — Nottingham</option>
+          <option value="DE65">DE65 — Derby</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="loadCompletedTasks()">🔄 Load Tasks</button>
+      </div>
+      <div id="histContent"></div>
+    </div>
+
+    <!-- HISTORY LOG PAGE -->
+    <div class="page" id="page-histlog">
+      <div class="page-title">History Log</div>
+      <div class="page-sub">Full 90-day task completion log across both sites.</div>
       <div class="date-row">
         <label style="font-size:13px;font-weight:600;color:var(--muted);">Last</label>
         <select class="form-select" style="width:auto;" id="histDays" onchange="loadHistory()">
           <option value="7">7 days</option>
           <option value="14">14 days</option>
           <option value="30">30 days</option>
+          <option value="60">60 days</option>
+          <option value="90" selected>90 days (3 months)</option>
         </select>
         <label style="font-size:13px;font-weight:600;color:var(--muted);">days</label>
-        <select class="form-select" style="width:auto;" id="histSite" onchange="loadHistory()">
+        <select class="form-select" style="width:auto;" id="histSiteLog" onchange="loadHistory()">
           <option value="">Both sites</option>
           <option value="NG8">NG8 only</option>
           <option value="DE65">DE65 only</option>
         </select>
       </div>
-      <div id="histContent"></div>
+      <div id="histLogContent"></div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div class="page-title">Performance Analytics</div>
+      <div class="page-sub">3-month staff and task performance overview for both stores.</div>
+      <div class="date-row">
+        <label style="font-size:13px;font-weight:600;color:var(--muted);">Period:</label>
+        <select class="form-select" style="width:auto;" id="statsDays" onchange="loadAnalytics()">
+          <option value="30">Last 30 days</option>
+          <option value="60">Last 60 days</option>
+          <option value="90" selected>Last 90 days (3 months)</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="loadAnalytics()">🔄 Refresh</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadBackup()">💾 Download Data Backup</button>
+      </div>
+      <div id="analyticsContent"><div style="color:var(--muted);font-size:13px;">Select a period and click Refresh.</div></div>
     </div>
 
     <!-- PHOTOS PAGE -->
@@ -270,11 +360,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
       <div class="date-row">
         <input class="date-inp" type="date" id="photoDate" onchange="loadPhotos()">
         <select class="form-select" style="width:auto;" id="photoSite" onchange="loadPhotos()">
-          <option value="NG8">NG8</option>
-          <option value="DE65">DE65</option>
+          <option value="NG8">NG8 — Nottingham</option>
+          <option value="DE65">DE65 — Derby</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="loadPhotos()">🔄 Load</button>
+        <button class="btn btn-primary btn-sm" onclick="loadPhotos()">🔄 Load Photos</button>
       </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Click any photo to view it full size. Photos are grouped by task so you can see exactly what evidence was provided for each one.</p>
       <div id="photoContent"></div>
     </div>
 
@@ -362,6 +453,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 
 <div class="toast" id="toast"></div>
 
+<!-- PHOTO LIGHTBOX -->
+<div class="viewer-overlay" id="viewerOverlay" onclick="if(event.target===this)closeViewer()">
+  <button class="viewer-close" onclick="closeViewer()">✕</button>
+  <div class="viewer-img-wrap">
+    <img id="viewerImg" src="" alt="Evidence photo">
+  </div>
+  <div class="viewer-bar">
+    <button class="viewer-btn" id="viewerPrev" onclick="viewerNav(-1)">‹</button>
+    <div style="text-align:center;">
+      <div class="viewer-title" id="viewerTitle"></div>
+      <div class="viewer-count" id="viewerCount"></div>
+    </div>
+    <button class="viewer-btn" id="viewerNext" onclick="viewerNav(1)">›</button>
+  </div>
+  <button class="viewer-open-btn" onclick="window.open(viewerPhotos[viewerIdx],'_blank')">⬡ Open full size</button>
+</div>
+
 <script>
 const API='';
 let token=null, managerUser=null;
@@ -382,8 +490,99 @@ async function doLogin(){
   document.getElementById('dashDate').value=today;
   document.getElementById('penDate').value=today;
   document.getElementById('photoDate').value=today;
+  const hd=document.getElementById('histDate');
+  if(hd) hd.value=today;
   loadDashboard();
-  refreshInterval=setInterval(loadDashboard,60000);
+  refreshInterval=setInterval(()=>{
+    const selDate=document.getElementById('dashDate')?.value;
+    const td=new Date().toISOString().split('T')[0];
+    if(selDate===td) loadDashboard(); // only auto-refresh when viewing today
+  },60000);
+}
+
+async function loadAnalytics(){
+  const days=document.getElementById('statsDays').value;
+  const cont=document.getElementById('analyticsContent');
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;">Loading analytics...</div>';
+  const r=await fetch(`${API}/api/manager/stats?days=${days}`,{headers:hdr()});
+  const d=await r.json();
+
+  let html='';
+
+  // Staff performance table
+  html+=`<div class="two-col" style="margin-bottom:16px;">
+    <div class="card">
+      <div class="card-title">👥 Staff Performance — Last ${days} Days</div>
+      <table class="tbl">
+        <thead><tr><th>Staff Member</th><th>Site</th><th>Tasks Done</th><th>Penalties</th><th>Rating</th></tr></thead>
+        <tbody>${(d.staff_performance||[]).map(s=>{
+          const rating=s.penalties===0&&s.tasks_done>0?'⭐ Excellent':s.penalties<=1?'✅ Good':s.penalties<=3?'⚠ Watch':'🔴 Review';
+          return `<tr>
+            <td><strong>${s.name}</strong></td>
+            <td><span class="badge badge-${s.site==='NG8'?'blue':'purple'}">${s.site}</span></td>
+            <td><span class="badge badge-green">${s.tasks_done}</span></td>
+            <td>${s.penalties>0?`<span class="badge badge-red">${s.penalties}</span>`:'<span class="badge badge-green">0</span>'}</td>
+            <td>${rating}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠️ Most Missed Tasks — Last ${days} Days</div>
+      ${d.most_missed&&d.most_missed.length?`<table class="tbl">
+        <thead><tr><th>Task</th><th>Site</th><th>Shift</th><th>Times Missed</th></tr></thead>
+        <tbody>${d.most_missed.map(t=>`<tr>
+          <td style="font-size:12px;">${t.name}</td>
+          <td><span class="badge badge-${t.site==='NG8'?'blue':'purple'}">${t.site}</span></td>
+          <td style="font-size:11px;color:var(--muted);text-transform:capitalize;">${t.shift}</td>
+          <td><span class="badge badge-red">${t.miss_count}x</span></td>
+        </tr>`).join('')}</tbody>
+      </table>`:'<div style="color:var(--green-d);font-weight:600;padding:10px;">✅ No missed tasks recorded</div>'}
+    </div>
+  </div>`;
+
+  // Daily completion trend
+  if(d.daily&&d.daily.length){
+    const ng8Days=d.daily.filter(x=>x.site==='NG8');
+    const de65Days=d.daily.filter(x=>x.site==='DE65');
+    const ng8Total=d.task_counts?.ng8||1;
+    const de65Total=d.task_counts?.de65||1;
+    html+=`<div class="card">
+      <div class="card-title">📊 Daily Completion Trend</div>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>NG8 Completion</th><th>DE65 Completion</th><th>Combined Penalties</th></tr></thead>
+        <tbody>${Object.keys([...new Set(d.daily.map(x=>x.date))].reduce((a,d)=>{a[d]=true;return a;},{})).slice(0,30).map(date=>{
+          const ng8=ng8Days.find(x=>x.date===date);
+          const de65=de65Days.find(x=>x.date===date);
+          const ng8pct=ng8?Math.round(ng8.done/ng8Total*100):0;
+          const de65pct=de65?Math.round(de65.done/de65Total*100):0;
+          const pens=(ng8?.penalties||0)+(de65?.penalties||0);
+          const dp=new Date(date+'T12:00:00');
+          return `<tr>
+            <td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;">${dp.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div style="height:8px;width:${ng8pct}px;max-width:100px;background:var(--mid);border-radius:4px;min-width:4px;"></div><span style="font-size:12px;">${ng8pct}%</span></div></td>
+            <td><div style="display:flex;align-items:center;gap:8px;"><div style="height:8px;width:${de65pct}px;max-width:100px;background:#7B3F8C;border-radius:4px;min-width:4px;"></div><span style="font-size:12px;">${de65pct}%</span></div></td>
+            <td>${pens>0?`<span class="badge badge-red">${pens} penalties</span>`:'<span class="badge badge-green">None</span>'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  cont.innerHTML=html;
+}
+
+async function downloadBackup(){
+  const r=await fetch(`${API}/api/manager/backup`,{headers:hdr()});
+  const data=await r.json();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`expresssavers-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Backup downloaded','g');
 }
 
 function signOut(){
@@ -401,8 +600,15 @@ function goPage(id, el){
   if(id==='tasks') loadTasks();
   if(id==='staff') loadStaff();
   if(id==='penalties') loadPenalties();
-  if(id==='history') loadHistory();
+  if(id==='history'){
+    const today=new Date().toISOString().split('T')[0];
+    const di=document.getElementById('histDate');
+    if(di&&!di.value) di.value=today;
+    loadCompletedTasks();
+  }
+  if(id==='histlog') loadHistory();
   if(id==='photos') loadPhotos();
+  if(id==='analytics') loadAnalytics();
 }
 
 function hdr(){return {Authorization:`Bearer ${token}`};}
@@ -410,8 +616,22 @@ function hdr(){return {Authorization:`Bearer ${token}`};}
 // ── DASHBOARD ─────────────────────────────────
 async function loadDashboard(){
   const date=document.getElementById('dashDate').value;
+  const today2=new Date().toISOString().split('T')[0];
+  const isToday=date===today2;
   const r=await fetch(`${API}/api/manager/dashboard?date=${date}`,{headers:hdr()});
+  if(!r.ok){console.error('Dashboard fetch failed',r.status);return;}
   const d=await r.json();
+  // Show banner if viewing a past date
+  const banner=document.getElementById('dateBanner');
+  if(banner){
+    if(!isToday){
+      const dp=new Date(date+'T12:00:00');
+      banner.style.display='block';
+      banner.textContent='📅 Viewing historical data for: '+dp.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    } else {
+      banner.style.display='none';
+    }
+  }
   const ng8Pct=d.ng8.total?Math.round(d.ng8.done/d.ng8.total*100):0;
   const de65Pct=d.de65.total?Math.round(d.de65.done/d.de65.total*100):0;
   const combDone=d.ng8.done+d.de65.done;
@@ -716,48 +936,368 @@ async function waivePen(id){
 // ── HISTORY ───────────────────────────────────
 async function loadHistory(){
   const days=document.getElementById('histDays').value;
-  const site=document.getElementById('histSite').value;
+  const site=document.getElementById('histSiteLog')?.value||'';
+  const cont=document.getElementById('histLogContent');
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px;">Loading history...</div>';
   let url=`${API}/api/manager/history?days=${days}`;
   if(site) url+=`&site=${site}`;
   const r=await fetch(url,{headers:hdr()});
-  const data=await r.json();
-  if(!data.length){document.getElementById('histContent').innerHTML='<div class="card" style="color:var(--muted);">No history found.</div>';return;}
-  document.getElementById('histContent').innerHTML=`<div class="card">
-    <table class="tbl"><thead><tr><th>Date</th><th>Site</th><th>Staff</th><th>Task</th><th>Status</th><th>Penalty</th></tr></thead><tbody>
-    ${data.map(r=>`<tr>
-      <td style="font-family:'DM Mono',monospace;font-size:12px;">${r.date}</td>
-      <td><span class="badge badge-${r.site==='NG8'?'blue':'purple'}">${r.site}</span></td>
-      <td>${r.user_name}</td>
-      <td style="font-size:12px;">${r.task_name}</td>
-      <td><span class="badge ${r.is_done?'badge-green':'badge-amber'}">${r.is_done?'Done':'Missed'}</span></td>
-      <td>${r.penalty_triggered?`<span class="badge ${r.penalty_waived?'badge-amber':'badge-red'}">${r.penalty_waived?'Waived':'£'+r.penalty_amount}</span>`:'—'}</td>
-    </tr>`).join('')}
-    </tbody></table></div>`;
+  const resp=await r.json();
+  const data=resp.rows||resp;
+  const summary=resp.summary||[];
+  if(!data.length){cont.innerHTML='<div class="card" style="color:var(--muted);">No history found for this period.</div>';return;}
+
+  // Group by date for summary view
+  const byDate={};
+  data.forEach(row=>{
+    if(!byDate[row.date]) byDate[row.date]={};
+    if(!byDate[row.date][row.site]) byDate[row.date][row.site]=[];
+    byDate[row.date][row.site].push(row);
+  });
+
+  let html='';
+
+  // Summary cards first
+  if(summary.length){
+    html+=`<div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Daily Summary — Last ${days} Days</div>
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Site</th><th>Tasks Done</th><th>Staff Active</th><th>Penalties</th></tr></thead>
+        <tbody>${summary.map(s=>`<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;">${new Date(s.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}</td>
+          <td><span class="badge badge-${s.site==='NG8'?'blue':'purple'}">${s.site}</span></td>
+          <td><span class="badge badge-green">${s.done} done</span></td>
+          <td>${s.staff_count} staff</td>
+          <td>${s.penalties>0?`<span class="badge badge-red">${s.penalties} — £${s.penalty_total||0}</span>`:'<span class="badge badge-green">None</span>'}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  // Full task log
+  html+=`<div class="card">
+    <div class="card-title">Full Task Log</div>
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Site</th><th>Staff</th><th>Shift</th><th>Task</th><th>Status</th><th>Penalty</th></tr></thead>
+      <tbody>${data.map(r=>`<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;">${r.date}</td>
+        <td><span class="badge badge-${r.site==='NG8'?'blue':'purple'}">${r.site}</span></td>
+        <td style="font-size:12px;">${r.user_name}</td>
+        <td><span style="font-size:11px;color:var(--muted);text-transform:capitalize;">${r.shift||''}</span></td>
+        <td style="font-size:12px;">${r.task_name}</td>
+        <td><span class="badge ${r.is_done?'badge-green':'badge-amber'}">${r.is_done?'✅ Done':'◯ Missed'}</span></td>
+        <td>${r.penalty_triggered?`<span class="badge ${r.penalty_waived?'badge-amber':'badge-red'}">${r.penalty_waived?'Waived':'£'+r.penalty_amount}</span>`:'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+
+  cont.innerHTML=html;
 }
 
-// ── PHOTOS ────────────────────────────────────
+// ── COMPLETED TASKS (main task detail view) ──────────
+async function loadCompletedTasks(){
+  const date = document.getElementById('histDate').value;
+  const site = document.getElementById('histSite').value;
+  const cont = document.getElementById('histContent');
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px;">Loading tasks...</div>';
+
+  const dp = new Date(date+'T12:00:00');
+  const dateLabel = dp.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const isToday = date === new Date().toISOString().split('T')[0];
+
+  // Load tasks, completions, photos and subtasks in parallel
+  const [taskRes, compRes] = await Promise.all([
+    fetch(`${API}/api/tasks/${site}`,{headers:hdr()}),
+    fetch(`${API}/api/completions/${site}/${date}`,{headers:hdr()})
+  ]);
+  const taskData = await taskRes.json();
+  const compData = await compRes.json();
+
+  const tasks = taskData.tasks || [];
+  const subtasks = taskData.subtasks || [];
+  const completions = compData.completions || [];
+  const photos = compData.photos || [];
+  const subComps = compData.subtask_completions || [];
+
+  // Build lookups
+  const subtasksByTask = {};
+  subtasks.forEach(s => {
+    if(!subtasksByTask[s.task_id]) subtasksByTask[s.task_id] = [];
+    subtasksByTask[s.task_id].push(s);
+  });
+
+  const compByTask = {};
+  completions.forEach(c => { compByTask[c.task_id] = c; });
+
+  const photosByComp = {};
+  photos.forEach(p => {
+    if(!photosByComp[p.completion_id]) photosByComp[p.completion_id] = [];
+    photosByComp[p.completion_id].push(p);
+  });
+
+  const subCompMap = {};
+  subComps.forEach(sc => { subCompMap[sc.completion_id+'__'+sc.subtask_id] = sc.checked; });
+
+  if(!tasks.length){
+    cont.innerHTML='<div class="no-tasks-msg">No tasks found for this site.</div>';
+    return;
+  }
+
+  // Group by shift
+  const shifts = {opening:[], midday:[], closing:[]};
+  tasks.forEach(t => { if(shifts[t.shift]) shifts[t.shift].push(t); });
+
+  const shiftConfig = {
+    opening: {emoji:'🌅', label:'Opening Tasks'},
+    midday:  {emoji:'☀️',  label:'Midday Tasks'},
+    closing: {emoji:'🌙', label:'Closing Tasks'}
+  };
+
+  let html = `<div style="margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--text);">📅 ${dateLabel} — ${site==='NG8'?'Family Shopper Nottingham':'Nisa / Post Office Derby'}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">${isToday?'Live view — updates every 60 seconds':'Historical view'} · Click any task to expand and see full detail</div>
+  </div>`;
+
+  ['opening','midday','closing'].forEach(shift => {
+    const shiftTasks = shifts[shift];
+    if(!shiftTasks.length) return;
+    const cfg = shiftConfig[shift];
+    const doneCnt = shiftTasks.filter(t => compByTask[t.id]?.is_done).length;
+    const penCnt = shiftTasks.filter(t => t.penalty && !compByTask[t.id]?.is_done).length;
+
+    html += `<div class="shift-section">
+      <div class="shift-header">
+        <span style="font-size:20px;">${cfg.emoji}</span>
+        <div class="shift-title">${cfg.label}</div>
+        <div class="shift-stats">${doneCnt}/${shiftTasks.length} done${penCnt>0?` · <span style="color:var(--red);font-weight:700;">⚠ ${penCnt} penalty risk</span>`:''}</div>
+      </div>`;
+
+    shiftTasks.forEach(task => {
+      const comp = compByTask[task.id];
+      const isDone = comp?.is_done;
+      const taskPhotos = comp ? (photosByComp[comp.id]||[]) : [];
+      const taskSubs = subtasksByTask[task.id]||[];
+      const completedAt = comp?.completed_at ? new Date(comp.completed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : null;
+      const staffName = comp?.user_name || null;
+      const hasPenalty = task.penalty && !isDone && !comp?.penalty_waived;
+
+      // Subtask completion count
+      const subsDone = comp ? taskSubs.filter(s => subCompMap[comp.id+'__'+s.id]).length : 0;
+
+      html += `<div class="task-detail-card ${isDone?'done':comp?'missed':''}" id="tdc-${task.id}">
+        <div class="task-detail-hdr" onclick="toggleTaskDetail('${task.id}')">
+          <div class="task-detail-icon ${isDone?'done':'missed'}">${isDone?'✅':hasPenalty?'⚠️':'◯'}</div>
+          <div class="task-detail-info">
+            <div class="task-detail-name">${task.name}</div>
+            <div class="task-detail-meta">
+              <span>🕐 ${task.time_window||''}</span>
+              ${isDone&&staffName?`<span>👤 ${staffName}</span>`:''}
+              ${isDone&&completedAt?`<span>✓ Completed ${completedAt}</span>`:''}
+              ${taskSubs.length?`<span>☑ ${subsDone}/${taskSubs.length} checklist</span>`:''}
+              ${taskPhotos.length?`<span>📷 ${taskPhotos.length} photo${taskPhotos.length!==1?'s':''}</span>`:''}
+              ${hasPenalty?`<span style="color:var(--red);font-weight:700;">⚠ £${task.penalty_amount} at risk</span>`:''}
+              ${comp?.penalty_waived?`<span style="color:var(--green-d);">✅ Penalty waived</span>`:''}
+            </div>
+          </div>
+          <div class="task-detail-arrow">▾</div>
+        </div>
+        <div class="task-detail-body">
+
+          ${task.description?`<div class="detail-section">
+            <div class="detail-section-title">Task Description</div>
+            <div class="detail-notes" style="background:none;padding:0;color:var(--muted);">${task.description}</div>
+          </div>`:''}
+
+          ${taskSubs.length?`<div class="detail-section">
+            <div class="detail-section-title">Checklist</div>
+            ${taskSubs.map(s=>{
+              const checked = comp ? !!subCompMap[comp.id+'__'+s.id] : false;
+              return `<div class="detail-subtask">
+                <div class="detail-subtask-chk ${checked?'done':'not'}">${checked?'✓':''}</div>
+                <span style="${checked?'text-decoration:line-through;color:var(--muted);':''}">${s.label}</span>
+              </div>`;
+            }).join('')}
+          </div>`:''}
+
+          ${comp?.notes?`<div class="detail-section">
+            <div class="detail-section-title">Staff Notes & Temperatures</div>
+            <div class="detail-notes">${comp.notes}</div>
+          </div>`:''}
+
+          <div class="detail-section">
+            <div class="detail-section-title">Evidence Photos ${taskPhotos.length?`(${taskPhotos.length})`:'— None uploaded'}</div>
+            ${taskPhotos.length?`<div class="detail-photos">
+              ${taskPhotos.map((p,idx)=>{
+                const url = p.filename.startsWith('http')?p.filename:'/uploads/'+p.filename;
+                const allUrls = taskPhotos.map(x=>x.filename.startsWith('http')?x.filename:'/uploads/'+x.filename);
+                return `<div class="detail-photo" onclick="openPhotoViewer('${task.name}',${JSON.stringify(allUrls)},${idx})">
+                  <img src="${url}" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;background:#f5f5f5;font-size:24px;\'>📷</div>'">
+                  <div class="detail-photo-label">Photo ${idx+1}</div>
+                </div>`;
+              }).join('')}
+            </div>`:`<div class="detail-no-photos">${task.requires_photo?'⚠ Photo required but not uploaded':'No photo required for this task'}</div>`}
+          </div>
+
+          ${task.penalty?`<div class="detail-section">
+            <div class="detail-section-title">Penalty Rule</div>
+            <div class="detail-penalty-box">⚠ ${task.penalty_rule}${comp?.penalty_waived?'<br><strong style="color:var(--green-d);">✅ Penalty waived by '+comp.waived_by+'</strong>':''}</div>
+            ${hasPenalty?`<button class="btn btn-success btn-sm" style="margin-top:8px;" onclick="waivePenFromTask('${comp?.id||''}','${task.id}')">✅ Waive This Penalty</button>`:''}
+          </div>`:''}
+
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--off);">
+            Task ID: ${task.id} · ${isDone?'Completed':'Not completed'} · ${task.critical?'Critical task':'Standard task'}
+          </div>
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  cont.innerHTML = html;
+
+  // Auto-refresh if viewing today
+  if(isToday && !window._taskRefresh){
+    window._taskRefresh = setInterval(()=>{
+      if(document.getElementById('page-history').classList.contains('active')) loadCompletedTasks();
+    }, 60000);
+  }
+}
+
+function toggleTaskDetail(id){
+  const card = document.getElementById('tdc-'+id);
+  if(card) card.classList.toggle('expanded');
+}
+
+async function waivePenFromTask(compId, taskId){
+  if(!compId){showToast('Task not yet started — no penalty to waive','a');return;}
+  await fetch(`${API}/api/completions/${compId}/penalty`,{method:'POST',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify({triggered:true,waived:true})});
+  showToast('✅ Penalty waived','g');
+  loadCompletedTasks();
+}
+
+// ── PHOTOS (kept for compatibility) ────────────────────
+let allTasksCache={};
+
 async function loadPhotos(){
   const date=document.getElementById('photoDate').value;
   const site=document.getElementById('photoSite').value;
-  const r=await fetch(`${API}/api/completions/${site}/${date}`,{headers:hdr()});
-  const d=await r.json();
   const cont=document.getElementById('photoContent');
-  if(!d.photos.length){cont.innerHTML='<div class="card" style="color:var(--muted);">No photos uploaded for this date and site.</div>';return;}
+  cont.innerHTML='<div style="color:var(--muted);font-size:13px;">Loading photos...</div>';
+
+  // Load tasks so we can show real task names
+  const [compRes, taskRes] = await Promise.all([
+    fetch(`${API}/api/completions/${site}/${date}`,{headers:hdr()}),
+    fetch(`${API}/api/tasks/${site}`,{headers:hdr()})
+  ]);
+  const d=await compRes.json();
+  const taskData=await taskRes.json();
+
+  // Build task name lookup
+  const taskNames={};
+  const taskShifts={};
+  if(taskData.tasks){
+    taskData.tasks.forEach(t=>{
+      taskNames[t.id]=t.name;
+      taskShifts[t.id]=t.shift;
+    });
+  }
+
+  if(!d.photos||!d.photos.length){
+    cont.innerHTML='<div class="card" style="color:var(--muted);font-size:14px;padding:20px;">No photos uploaded for this date and site.</div>';
+    return;
+  }
+
+  // Group photos by task, with task name, staff name, time
   const grouped={};
   d.photos.forEach(p=>{
     const comp=d.completions.find(c=>c.id===p.completion_id);
-    const key=comp?comp.task_id:'unknown';
-    if(!grouped[key]) grouped[key]=[];
-    grouped[key].push({...p,comp});
+    const taskId=comp?comp.task_id:'unknown';
+    if(!grouped[taskId]) grouped[taskId]=[];
+    grouped[taskId].push({...p,comp});
   });
+
+  const shiftOrder={opening:1,midday:2,closing:3};
+  const sortedTaskIds=Object.keys(grouped).sort((a,b)=>{
+    const sa=shiftOrder[taskShifts[a]]||99;
+    const sb=shiftOrder[taskShifts[b]]||99;
+    return sa-sb;
+  });
+
   let html='';
-  for(const [taskId, ps] of Object.entries(grouped)){
-    const comp=ps[0].comp;
-    html+=`<div class="card"><div class="card-title">${comp?.task_id||taskId} — uploaded by ${comp?.user_name||'Unknown'}</div>
-    <div class="photo-grid-mgr">${ps.map(p=>`<div class="photo-thumb-mgr" onclick="window.open('/uploads/${p.filename}','_blank')"><img src="/uploads/${p.filename}" onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 100 100&quot;><rect fill=&quot;%23f0f0f0&quot; width=&quot;100&quot; height=&quot;100&quot;/><text y=&quot;.9em&quot; font-size=&quot;50&quot; x=&quot;50%&quot; text-anchor=&quot;middle&quot;>📷</text></svg>'"></div>`).join('')}
-    </div></div>`;
+  const dp=new Date(date+'T12:00:00');
+  const dateLabel=dp.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  html+=`<div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:16px;">
+    📅 ${dateLabel} — ${site==='NG8'?'Family Shopper Nottingham':'Nisa / Post Office Derby'}
+    — ${d.photos.length} photo${d.photos.length!==1?'s':''} uploaded
+  </div>`;
+
+  for(const taskId of sortedTaskIds){
+    const ps=grouped[taskId];
+    const taskName=taskNames[taskId]||taskId;
+    const shift=taskShifts[taskId]||'';
+    const shiftEmoji={opening:'🌅',midday:'☀️',closing:'🌙'}[shift]||'';
+
+    // Get unique staff who uploaded for this task
+    const staffNames=[...new Set(ps.map(p=>p.comp?.user_name||'Unknown'))].join(', ');
+    const uploadTime=ps[0].comp?.completed_at?
+      new Date(ps[0].comp.completed_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):
+      '';
+
+    html+=`<div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${shiftEmoji} ${taskName}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">
+            👤 ${staffNames}
+            ${uploadTime?` &nbsp;·&nbsp; 🕐 Completed at ${uploadTime}`:''}
+            &nbsp;·&nbsp; ${ps.length} photo${ps.length!==1?'s':''}
+          </div>
+        </div>
+        <span class="badge badge-${shift==='opening'?'blue':shift==='midday'?'amber':'purple'}" style="text-transform:capitalize;">${shift}</span>
+      </div>
+      <div class="photo-grid-mgr">
+        ${ps.map((p,idx)=>`
+          <div class="photo-thumb-mgr" onclick="openPhotoViewer('${taskName}',${JSON.stringify(ps.map(x=>x.filename.startsWith('http')?x.filename:'/uploads/'+x.filename))},${idx})" style="position:relative;">
+            <img src="${p.filename.startsWith('http')?p.filename:'/uploads/'+p.filename}"
+              onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;background:#f5f5f5;font-size:24px;\'>📷</div>'"
+              style="width:100%;height:100%;object-fit:cover;">
+            <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:white;font-size:10px;padding:3px 6px;font-weight:600;">Photo ${idx+1}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
   }
   cont.innerHTML=html;
+}
+
+// ── PHOTO LIGHTBOX VIEWER ──────────────────────
+let viewerPhotos=[], viewerIdx=0, viewerTitle='';
+
+function openPhotoViewer(title, photos, startIdx){
+  viewerPhotos=photos;
+  viewerIdx=startIdx;
+  viewerTitle=title;
+  document.getElementById('viewerOverlay').classList.add('show');
+  updateViewer();
+}
+
+function updateViewer(){
+  document.getElementById('viewerImg').src=viewerPhotos[viewerIdx];
+  document.getElementById('viewerTitle').textContent=viewerTitle;
+  document.getElementById('viewerCount').textContent=`Photo ${viewerIdx+1} of ${viewerPhotos.length}`;
+  document.getElementById('viewerPrev').style.opacity=viewerIdx===0?'0.3':'1';
+  document.getElementById('viewerNext').style.opacity=viewerIdx===viewerPhotos.length-1?'0.3':'1';
+}
+
+function viewerNav(dir){
+  const newIdx=viewerIdx+dir;
+  if(newIdx>=0 && newIdx<viewerPhotos.length){viewerIdx=newIdx;updateViewer();}
+}
+
+function closeViewer(){
+  document.getElementById('viewerOverlay').classList.remove('show');
+}
 }
 
 // ── MODAL ─────────────────────────────────────
