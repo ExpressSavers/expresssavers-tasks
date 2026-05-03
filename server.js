@@ -13,7 +13,10 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'expresssavers-secret-2025-changeme';
 
 // ── DB ────────────────────────────────────────────────
-const db = createClient({ url: process.env.DB_URL || 'file:./tasks.db' });
+const db = createClient({
+  url: process.env.DB_URL || 'file:./tasks.db',
+  authToken: process.env.DB_TOKEN
+});
 
 async function initDB() {
   await db.executeMultiple(`
