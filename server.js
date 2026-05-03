@@ -98,6 +98,33 @@ async function initDB() {
       FOREIGN KEY(completion_id) REFERENCES completions(id)
     );
 
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      sender_id TEXT NOT NULL,
+      recipient_id TEXT,
+      recipient_site TEXT DEFAULT 'ALL',
+      subject TEXT,
+      body TEXT NOT NULL,
+      priority TEXT DEFAULT 'normal',
+      parent_id TEXT,
+      read_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(sender_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS task_assignments (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      site TEXT NOT NULL,
+      date TEXT,
+      permanent INTEGER DEFAULT 0,
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(task_id) REFERENCES tasks(id),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
@@ -472,6 +499,132 @@ app.get('/api/setup', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+
+// ── MESSAGES ─────────────────────────────────────────
+app.get('/api/messages/:userId', auth, async (req, res) => {
+  const { userId } = req.params;
+  // Staff see messages addressed to them or their site or ALL
+  // Manager sees all messages
+  let result;
+  if (req.user.is_manager) {
+    result = await db.execute(`
+      SELECT m.*, u.name as sender_name, u.color as sender_color,
+             r.name as recipient_name
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      LEFT JOIN users r ON m.recipient_id = r.id
+      ORDER BY m.created_at DESC LIMIT 100`);
+  } else {
+    result = await db.execute(`
+      SELECT m.*, u.name as sender_name, u.color as sender_color,
+             r.name as recipient_name
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      LEFT JOIN users r ON m.recipient_id = r.id
+      WHERE m.recipient_id = ? OR m.recipient_id = 'ALL'
+        OR m.recipient_site = ? OR m.recipient_site = 'ALL'
+        OR m.sender_id = ?
+      ORDER BY m.created_at DESC LIMIT 50`,
+      [userId, req.user.site, userId]);
+  }
+  // Count unread
+  const unread = await db.execute(
+    `SELECT COUNT(*) as cnt FROM messages 
+     WHERE (recipient_id=? OR recipient_id='ALL' OR recipient_site=? OR recipient_site='ALL')
+     AND sender_id != ? AND read_at IS NULL`,
+    [userId, req.user.site, userId]);
+  res.json({ messages: result.rows, unread: unread.rows[0].cnt });
+});
+
+app.post('/api/messages', auth, async (req, res) => {
+  const { recipient_id, recipient_site, subject, body, priority } = req.body;
+  if (!body) return res.status(400).json({ error: 'Message body required' });
+  const id = require('uuid').v4();
+  await db.execute(
+    `INSERT INTO messages (id, sender_id, recipient_id, recipient_site, subject, body, priority, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [id, req.user.id, recipient_id||null, recipient_site||'ALL', subject||'', body, priority||'normal']);
+  res.json({ id });
+});
+
+app.post('/api/messages/:id/reply', auth, async (req, res) => {
+  const { body } = req.body;
+  if (!body) return res.status(400).json({ error: 'Reply body required' });
+  // Get original message
+  const orig = await db.execute('SELECT * FROM messages WHERE id=?', [req.params.id]);
+  if (!orig.rows.length) return res.status(404).json({ error: 'Message not found' });
+  const o = orig.rows[0];
+  const id = require('uuid').v4();
+  // Reply goes back to the original sender
+  await db.execute(
+    `INSERT INTO messages (id, sender_id, recipient_id, recipient_site, subject, body, parent_id, priority, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'reply', datetime('now'))`,
+    [id, req.user.id, o.sender_id, null, 'Re: '+(o.subject||''), body, req.params.id]);
+  res.json({ id });
+});
+
+app.post('/api/messages/:id/read', auth, async (req, res) => {
+  await db.execute(
+    `UPDATE messages SET read_at=datetime('now') WHERE id=? AND sender_id != ?`,
+    [req.params.id, req.user.id]);
+  res.json({ ok: true });
+});
+
+app.delete('/api/messages/:id', managerAuth, async (req, res) => {
+  await db.execute('DELETE FROM messages WHERE id=?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// ── TASK ASSIGNMENT ───────────────────────────────────
+app.get('/api/assignments/:site', auth, async (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  const result = await db.execute(`
+    SELECT ta.*, t.name as task_name, t.shift, u.name as user_name, u.color as user_color
+    FROM task_assignments ta
+    JOIN tasks t ON ta.task_id = t.id
+    JOIN users u ON ta.user_id = u.id
+    WHERE ta.site = ? AND (ta.date = ? OR ta.permanent = 1)
+    ORDER BY t.shift, t.sort_order`,
+    [req.params.site, today]);
+  res.json(result.rows);
+});
+
+app.post('/api/assignments', managerAuth, async (req, res) => {
+  const { task_id, user_id, site, date, permanent, note } = req.body;
+  const id = require('uuid').v4();
+  const assignDate = date || new Date().toISOString().split('T')[0];
+  // Remove existing assignment for this task/date if not permanent
+  if (!permanent) {
+    await db.execute(
+      'DELETE FROM task_assignments WHERE task_id=? AND date=? AND permanent=0',
+      [task_id, assignDate]);
+  } else {
+    await db.execute(
+      'DELETE FROM task_assignments WHERE task_id=? AND permanent=1',
+      [task_id]);
+  }
+  await db.execute(
+    `INSERT INTO task_assignments (id, task_id, user_id, site, date, permanent, note, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [id, task_id, user_id, site, assignDate, permanent?1:0, note||'']);
+  res.json({ id });
+});
+
+app.delete('/api/assignments/:id', managerAuth, async (req, res) => {
+  await db.execute('DELETE FROM task_assignments WHERE id=?', [req.params.id]);
+  res.json({ ok: true });
+});
+
+// Unread message count for staff badge
+app.get('/api/unread/:userId', auth, async (req, res) => {
+  const unread = await db.execute(
+    `SELECT COUNT(*) as cnt FROM messages 
+     WHERE (recipient_id=? OR recipient_id='ALL' OR recipient_site=? OR recipient_site='ALL')
+     AND sender_id != ? AND read_at IS NULL`,
+    [req.params.userId, req.user.site, req.params.userId]);
+  res.json({ unread: unread.rows[0].cnt });
 });
 
 // ── BACKUP / EXPORT ──────────────────────────────────
