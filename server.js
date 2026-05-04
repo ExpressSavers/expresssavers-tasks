@@ -1,4 +1,5 @@
 const express = require('express');
+const cloudinary = require('cloudinary').v2;
 const { createClient } = require('@libsql/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -11,6 +12,16 @@ const { v4: uuid } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'expresssavers-secret-2025-changeme';
+
+// ── CLOUDINARY CONFIG ─────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY);
+if(useCloudinary) console.log('✅ Cloudinary configured — photos will be stored permanently in cloud');
+else console.warn('⚠️  Cloudinary not configured — photos stored locally (will be lost on redeploy)');
 
 // ── DB ────────────────────────────────────────────────
 const db = createClient({ 
@@ -338,16 +349,53 @@ app.post('/api/completions/:id/subtask', auth, async (req, res) => {
 app.post('/api/completions/:id/photo', auth, upload.single('photo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });
   const photoId = uuid();
+  let photoUrl = `/uploads/${req.file.filename}`;
+  let publicId = req.file.filename;
+
+  // Upload to Cloudinary if configured
+  if (useCloudinary) {
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'expresssavers',
+        public_id: photoId,
+        resource_type: 'image',
+        transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+      });
+      photoUrl = result.secure_url;
+      publicId = result.public_id;
+      // Clean up local file after upload
+      const fs = require('fs');
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Cloudinary upload error:', err.message);
+      // Fall back to local storage if Cloudinary fails
+    }
+  }
+
   await db.execute(`INSERT INTO photos (id,completion_id,filename,original_name) VALUES (?,?,?,?)`,
-    [photoId, req.params.id, req.file.filename, req.file.originalname]);
-  res.json({ id: photoId, url: `/uploads/${req.file.filename}` });
+    [photoId, req.params.id, photoUrl, req.file.originalname]);
+  res.json({ id: photoId, url: photoUrl });
 });
 
 app.delete('/api/photos/:id', auth, async (req, res) => {
   const photo = await db.execute(`SELECT filename FROM photos WHERE id=?`, [req.params.id]);
   if (photo.rows.length) {
-    const fp = path.join(uploadDir, photo.rows[0].filename);
-    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    const filename = photo.rows[0].filename;
+    // Delete from Cloudinary if it's a Cloudinary URL
+    if (useCloudinary && filename.includes('cloudinary.com')) {
+      try {
+        // Extract public_id from URL
+        const parts = filename.split('/');
+        const publicId = 'expresssavers/' + parts[parts.length - 1].split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.error('Cloudinary delete error:', err.message);
+      }
+    } else {
+      // Delete local file
+      const fp = path.join(uploadDir, filename);
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    }
     await db.execute(`DELETE FROM photos WHERE id=?`, [req.params.id]);
   }
   res.json({ ok: true });
